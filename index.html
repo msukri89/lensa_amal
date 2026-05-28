@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LensaAmal - Video AI UI</title>
+    <style>
+        :root {
+            --ios-bg: #F2F2F7;
+            --ios-card: #FFFFFF;
+            --ios-primary: #139F46; /* Hijau LAZ */
+            --ios-text: #1C1C1E;
+            --ios-subtext: #8E8E93;
+            --ios-border: rgba(60, 60, 67, 0.18);
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-stack); -webkit-font-smoothing: antialiased; }
+        body { background-color: var(--ios-bg); color: var(--ios-text); padding-bottom: 110px; }
+
+        header { 
+            background-color: rgba(242, 242, 247, 0.85); 
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); 
+            padding: 16px; padding-top: calc(16px + env(safe-area-inset-top));
+            text-align: center; font-weight: 600; font-size: 1rem; 
+            position: sticky; top: 0; z-index: 100; border-bottom: 0.5px solid var(--ios-border);
+        }
+
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .program-header { margin-bottom: 24px; margin-top: 10px; }
+        .ios-large-title { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.8px; margin-bottom: 4px; }
+        .ios-subtitle { font-size: 1rem; color: var(--ios-subtext); font-weight: 500; }
+
+        h4.section-title { 
+            margin-left: 16px; margin-bottom: 8px; margin-top: 28px;
+            color: var(--ios-subtext); font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; 
+        }
+
+        .ios-card { background-color: var(--ios-card); border-radius: 12px; padding: 0 16px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); overflow: hidden; }
+
+        /* Form Styling iOS */
+        .form-group { padding: 12px 0; border-bottom: 0.5px solid var(--ios-border); }
+        .form-group:last-child { border-bottom: none; }
+        .form-label { display: block; font-size: 0.8rem; color: var(--ios-subtext); margin-bottom: 6px; font-weight: 500;}
+        .ios-input, .ios-textarea { 
+            width: 100%; border: none; font-size: 1rem; color: var(--ios-text); 
+            background: transparent; outline: none; 
+        }
+        .ios-textarea { resize: vertical; min-height: 60px; line-height: 1.4; }
+        .ios-input::placeholder, .ios-textarea::placeholder { color: #C7C7CC; }
+
+        /* Custom UI Upload Video ala iOS */
+        .video-upload-zone {
+            padding: 20px 0; text-align: center;
+            border: 1.5px dashed #C7C7CC; border-radius: 8px;
+            margin-top: 8px; cursor: pointer; background: #76768008;
+            transition: background 0.2s;
+        }
+        .video-upload-zone:active { background: #76768015; }
+        .upload-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
+        .upload-text { font-size: 0.9rem; color: var(--ios-primary); font-weight: 600; }
+        .upload-subtext { font-size: 0.75rem; color: var(--ios-subtext); margin-top: 2px; }
+        
+        /* Video Preview */
+        #video-preview-container { display: none; margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; }
+        #video-preview { width: 100%; display: block; max-height: 250px; object-fit: cover; }
+        .btn-remove-video {
+            position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6);
+            color: white; border: none; border-radius: 50%; width: 26px; height: 26px;
+            font-weight: 600; font-size: 0.8rem; cursor: pointer;
+        }
+
+        /* List Item SOP & Checklist */
+        .list-item { padding: 16px 0; border-bottom: 0.5px solid var(--ios-border); font-size: 0.95rem; line-height: 1.4; color: var(--ios-text); }
+        .list-item:last-child { border-bottom: none; }
+        .list-item strong { color: var(--ios-primary); }
+
+        .shot-item { display: flex; align-items: flex-start; padding: 16px 0; border-bottom: 0.5px solid var(--ios-border); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .shot-item:last-child { border-bottom: none; }
+        .ios-checkbox { width: 24px; height: 24px; border: 1.5px solid var(--ios-subtext); border-radius: 50%; margin-right: 14px; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; flex-shrink: 0; background: transparent; }
+        .ios-checkbox svg { width: 14px; height: 14px; stroke: white; stroke-width: 2.5; fill: none; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset 0.2s ease; }
+        .shot-details { flex: 1; }
+        .shot-title { font-weight: 600; font-size: 1rem; margin-bottom: 4px; letter-spacing: -0.2px; }
+        .shot-desc { font-size: 0.88rem; color: var(--ios-subtext); line-height: 1.35; }
+        .shot-angle { font-size: 0.8rem; color: var(--ios-primary); font-weight: 500; margin-top: 6px; }
+
+        .shot-item.done .ios-checkbox { background: var(--ios-primary); border-color: var(--ios-primary); }
+        .shot-item.done .ios-checkbox svg { stroke-dashoffset: 0; }
+        .shot-item.done .shot-title { text-decoration: line-through; color: var(--ios-subtext); opacity: 0.6; }
+        .shot-item.done .shot-desc, .shot-item.done .shot-angle { opacity: 0.4; }
+
+        /* Action Buttons */
+        .btn-generate { 
+            background: #1C1C1E; color: white; border: none; width: 100%; padding: 14px; 
+            border-radius: 10px; font-size: 0.95rem; font-weight: 600; margin: 16px 0; 
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-generate:active { transform: scale(0.98); }
+        .btn-copy { background: #EBF2EE; color: var(--ios-primary); border: none; padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; margin-top: 12px; cursor: pointer; display: inline-block; width: 100%; -webkit-tap-highlight-color: transparent; }
+
+        /* Output Narasi Box */
+        .narasi-box { padding: 16px 0; }
+        .narasi-text { font-size: 1.05rem; line-height: 1.5; border-left: 4px solid var(--ios-primary); padding: 12px; background: #fafafa; border-radius: 0 8px 8px 0; }
+        .ai-status-tag { display: inline-block; background: #EBF2EE; color: var(--ios-primary); font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; }
+
+        /* Tab Menu Bawah */
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(242, 242, 247, 0.85); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: 0.5px solid var(--ios-border); display: flex; justify-content: space-around; align-items: center; padding: 10px 5px calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--ios-subtext); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; flex: 1; transition: color 0.2s; }
+        .tab-item.active { color: var(--ios-primary); }
+        .tab-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke-width: 1.5; stroke: currentColor; fill: none; }
+        .tab-item.active svg { stroke-width: 2; } 
+        .tab-label { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.2px; }
+    </style>
+</head>
+<body>
+
+    <header>LensaAmal</header>
+
+    <div class="container" id="main-content">
+        
+        <div class="program-header">
+            <h1 class="ios-large-title" id="display-title">Peduli Pendidikan</h1>
+            <p class="ios-subtitle" id="display-subtitle">Bantuan Beasiswa & Sarana</p>
+        </div>
+
+        <!-- 1. SOP -->
+        <h4 class="section-title">Persiapan & Etika (SOP)</h4>
+        <div class="ios-card" id="panel-sop"></div>
+
+        <!-- 2. CHECKLIST -->
+        <h4 class="section-title">Checklist Pengambilan Gambar</h4>
+        <div class="ios-card" id="panel-shot"></div>
+
+        <!-- 3. INPUT DATA & VIDEO MENTAH -->
+        <h4 class="section-title">Input Data & Analisis Video</h4>
+        <div class="ios-card">
+            <!-- Slot Upload Video -->
+            <div class="form-group">
+                <label class="form-label">Rekaman Video Lapangan (Footage)</label>
+                <input type="file" id="video-input" accept="video/*" style="display: none;" onchange="handleVideoUpload(this)">
+                
+                <div class="video-upload-zone" onclick="document.getElementById('video-input').click()">
+                    <span class="upload-icon">📹</span>
+                    <span class="upload-text">Upload atau Rekam Video</span>
+                    <p class="upload-subtext">AI akan menganalisis visual untuk variasi narasi</p>
+                </div>
+
+                <!-- Preview Player Video -->
+                <div id="video-preview-container">
+                    <button class="btn-remove-video" onclick="removeVideo()">✕</button>
+                    <video id="video-preview" controls></video>
+                </div>
+            </div>
+
+            <!-- Form Teks Keterangan -->
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap Mustahik</label>
+                <input type="text" id="input-nama" class="ios-input" placeholder="Contoh: Bapak Fulan">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Lokasi / Alamat</label>
+                <input type="text" id="input-alamat" class="ios-input" placeholder="Contoh: Gubeng, Surabaya">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Latar Belakang / Realita Lapangan</label>
+                <textarea id="input-latar" class="ios-textarea" placeholder="Tulis rintangan hidupnya (Misal: Jualan koran keliling dari subuh demi sekolah anak)"></textarea>
+            </div>
+            <div class="form-group" style="border:none;">
+                <label class="form-label">Tujuan Penyaluran Bantuan</label>
+                <input type="text" id="input-alasan" class="ios-input" placeholder="Contoh: Penunjang biaya masuk sekolah dan kitab">
+            </div>
+            
+            <button class="btn-generate" onclick="generateNarasi()">✨ Analisis & Buat Narasi VO</button>
+        </div>
+
+        <!-- 4. HASIL OUTPUT MULTIMODAL SIMULATION -->
+        <h4 class="section-title">Hasil Produksi Narasi VO</h4>
+        <div class="ios-card">
+            <div class="narasi-box">
+                <div id="ai-tag-container"></div>
+                <div id="text-copy-target" class="narasi-text">
+                    <em style="color: var(--ios-subtext);">Silakan isi data, masukkan video, lalu klik tombol analisis untuk memproduksi narasi.</em>
+                </div>
+                <button class="btn-copy" onclick="copyText()">Salin Teks Narasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU BAWAH -->
+    <nav class="tab-bar">
+        <div class="tab-item active" id="nav-pendidikan" onclick="switchProgram('pendidikan')">
+            <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg><span class="tab-label">Pendidikan</span>
+        </div>
+        <div class="tab-item" id="nav-kesehatan" onclick="switchProgram('kesehatan')">
+            <svg viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span class="tab-label">Kesehatan</span>
+        </div>
+        <div class="tab-item" id="nav-ekonomi" onclick="switchProgram('ekonomi')">
+            <svg viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x1="22" y1="10" y2="10"/><path d="M6 14h.01M10 14h.01"/></svg><span class="tab-label">Ekonomi</span>
+        </div>
+        <div class="tab-item" id="nav-dakwah" onclick="switchProgram('dakwah')">
+            <svg viewBox="0 0 24 24"><path d="M12 22v-9M12 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19 11a7 7 0 0 1-14 0c0-2 2-3 7-3s7 1 7 3Z"/></svg><span class="tab-label">Dakwah</span>
+        </div>
+        <div class="tab-item" id="nav-kumanling" onclick="switchProgram('kumanling')">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2Z"/><path d="M12 6a6 6 0 0 1 6 6c0 3.5-3 6-6 6s-6-2.5-6-6a6 6 0 0 1 6-6Z"/></svg><span class="tab-label">Lingkungan</span>
+        </div>
+    </nav>
+
+    <!-- PROGRAM LOGIC -->
+    <script>
+        const programData = {
+            pendidikan: {
+                title: "Peduli Pendidikan", subtitle: "Bantuan Beasiswa & Sarana",
+                sop: ["Pastikan berkoordinasi dengan pengurus sekolah sebelum mengambil video.", "Hormati muruah santri, tunjukkan semangatnya, BUKAN keluh kesahnya.", "Pastikan atribut LAZ Sidogiri terlihat saat penyerahan."],
+                shots: [
+                    { title: "Establishing Shot", desc: "Suasana gerbang pesantren atau gedung sekolah.", angle: "📐 Wide • Eye Level" },
+                    { title: "Activity Shot", desc: "Santri sedang belajar keras atau mengaji.", angle: "📐 Medium Shot • Candid" }
+                ]
+            },
+            ekonomi: {
+                title: "Peduli Ekonomi", subtitle: "Modal Usaha & Pemberdayaan",
+                sop: ["Posisikan kamera sejajar. Jangan beri kesan mengasihani dari atas.", "Tonjolkan kerasnya keringat mereka bekerja.", "Fokuskan pada kemandirian dan prospek usahanya."],
+                shots: [
+                    { title: "Establishing Shot", desc: "Lapak usaha dari luar saat sedang berjualan.", angle: "📐 Wide • Eye Level" },
+                    { title: "Detail Shot", desc: "Tangan yang sedang bekerja keras meracik jualan.", angle: "📐 Close-up" }
+                ]
+            }
+            // Program lain disingkat agar kode tidak terlalu bengkak & tetap ringan
+        };
+
+        let currentProgram = 'pendidikan';
+        let isVideoUploaded = false;
+
+        function switchProgram(programKey) {
+            currentProgram = programData[programKey] ? programKey : 'pendidikan';
+            document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('nav-' + currentProgram).classList.add('active');
+            renderBaseContent();
+            document.getElementById('text-copy-target').innerHTML = `<em style="color: var(--ios-subtext);">Silakan isi data, masukkan video, lalu klik tombol analisis untuk memproduksi narasi.</em>`;
+            document.getElementById('ai-tag-container').innerHTML = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderBaseContent() {
+            const data = programData[currentProgram] || programData['pendidikan'];
+            document.getElementById('display-title').innerText = data.title;
+            document.getElementById('display-subtitle').innerText = data.subtitle;
+
+            let sopHtml = '';
+            data.sop.forEach((item, index) => { sopHtml += `<div class="list-item"><strong>0${index+1}.</strong> ${item}</div>`; });
+            document.getElementById('panel-sop').innerHTML = sopHtml;
+            
+            let shotHtml = '';
+            data.shots.forEach((shot, index) => {
+                shotHtml += `
+                    <div class="shot-item" onclick="this.classList.toggle('done')">
+                        <div class="ios-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="shot-details">
+                            <div class="shot-title">${index+1}. ${shot.title}</div>
+                            <div class="shot-desc">${shot.desc}</div>
+                            <div class="shot-angle">${shot.angle}</div>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('panel-shot').innerHTML = shotHtml;
+        }
+
+        // Handle Pratinjau Video iOS
+        function handleVideoUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const videoURL = URL.createObjectURL(file);
+                const videoPlayer = document.getElementById('video-preview');
+                videoPlayer.src = videoURL;
+                
+                document.getElementById('video-preview-container').style.display = 'block';
+                document.querySelector('.video-upload-zone').style.display = 'none';
+                isVideoUploaded = true;
+            }
+        }
+
+        function removeVideo() {
+            document.getElementById('video-input').value = "";
+            document.getElementById('video-preview-container').style.display = 'none';
+            document.querySelector('.video-upload-zone').style.display = 'block';
+            isVideoUploaded = false;
+        }
+
+        // SIMULASI GENERATOR MULTIMODAL (UI ONLY)
+        function generateNarasi() {
+            const nama = document.getElementById('input-nama').value.trim() || "Pejuang Nafkah";
+            const alamat = document.getElementById('input-alamat').value.trim() || "Surabaya";
+            const latar = document.getElementById('input-latar').value.trim() || "menghadapi realita hidup yang tak mudah";
+            const alasan = document.getElementById('input-alasan').value.trim() || "menopang langkah kemandiriannya";
+
+            // Tambahkan intro khusus jika ada video yang diupload (Variasi Kreatif AI)
+            let videoVisualIntro = "";
+            if (isVideoUploaded) {
+                videoVisualIntro = "Lensa kamera menangkap gerak tegas penuh kesungguhan. ";
+            }
+
+            let narasi = "";
+            if (currentProgram === 'ekonomi') {
+                narasi = `${videoVisualIntro}Setiap tetes keringat ${nama} di sudut ${alamat} adalah simbol martabat yang tak luntur oleh keadaan. Ketika dihadapkan pada ujian ${latar}, beliau memilih tegak berdiri, menjemput rezeki dengan cara yang mulia. LAZ Sidogiri hadir mendukung etos kerja luar biasa ini melalui penyaluran bantuan modal dengan harapan ${alasan}. Sinergi ini adalah apresiasi atas ketangguhan, bukan sekadar belas kasihan.`;
+            } else {
+                narasi = `${videoVisualIntro}Tekad yang tulus selalu melahirkan jalan. Langkah kaki ${nama} di ${alamat} membuktikan bahwa rintangan ${latar} justru menempa jiwanya menjadi lebih tangguh. Melalui uluran Peduli Pendidikan LAZ Sidogiri, langkah kebaikan ini hadir untuk ${alasan}. Bersama amanah zakat Anda, kita jaga wibawa dan masa depan generasi tangguh.`;
+            }
+
+            // Tampilkan Tag Status Analisis
+            const tagContainer = document.getElementById('ai-tag-container');
+            if (isVideoUploaded) {
+                tagContainer.innerHTML = `<span class="ai-status-tag">✓ Multimodal AI: Video Teranalisis</span>`;
+            } else {
+                tagContainer.innerHTML = `<span class="ai-status-tag" style="background:#FFEBEB; color:#FF3B30;">⚠️ Hanya Analisis Teks (Video Kosong)</span>`;
+            }
+
+            document.getElementById('text-copy-target').innerText = narasi;
+            document.getElementById('text-copy-target').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function copyText() {
+            const text = document.getElementById('text-copy-target').innerText;
+            if(text.includes("Silakan isi data")) return;
+            navigator.clipboard.writeText(text);
+            
+            const btn = document.querySelector('.btn-copy');
+            const originalText = btn.innerText;
+            btn.innerText = "✓ Skrip VO Berhasil Disalin!";
+            btn.style.backgroundColor = "var(--ios-primary)";
+            btn.style.color = "white";
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = "#EBF2EE";
+                btn.style.color = "var(--ios-primary)";
+            }, 2000);
+        }
+
+        renderBaseContent();
+    </script>
+</body>
+</html>
