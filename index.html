@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <!-- PWA Manifest & Warna Tema -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#139F46">
 
+    <!-- Penambahan Icon / Favicon -->
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     
@@ -96,17 +98,25 @@
         .editable-textarea:focus { outline: none; border-color: var(--ios-primary); background: #fff; }
         .api-badge { background: #76768015; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;}
         .section-title { font-size: 0.85rem; color: var(--ios-subtext); margin: 20px 0 8px 16px; font-weight: 600; text-transform: uppercase; }
+
+        /* Guide Box TTS */
+        .guide-box { margin-top: 16px; padding: 12px; background: #F2F2F7; border-radius: 8px; font-size: 0.85rem; color: var(--ios-text); border: 1px solid var(--ios-border); }
+        .guide-box strong { color: var(--ios-primary); }
+        .context-copy-box { background: #E5E5EA; padding: 10px; border-radius: 6px; margin-top: 8px; font-family: monospace; word-break: break-all; cursor: pointer; font-size: 0.8rem; border: 1px dashed #C7C7CC; transition: 0.2s; }
+        .context-copy-box:active { background: #D1D1D6; }
     </style>
 </head>
 <body>
 
     <header>
+        <!-- Penempatan icon di header -->
         <img src="icon.png" alt="Logo LensaAmal" class="header-icon" onerror="this.style.display='none'">
         LensaAmal Pro
     </header>
 
     <div class="container">
         
+        <!-- PENGATURAN API KEY -->
         <div class="ios-card" style="padding: 12px 16px;">
             <div class="api-badge" style="margin-bottom: 8px;">
                 <div style="font-weight:600; font-size:0.9rem;">API Together (Gemma 3)</div>
@@ -115,6 +125,7 @@
             <input type="password" id="input-api-key" class="ios-input" placeholder="Tempel API Key di sini..." oninput="saveApiKey(this.value)" style="font-size: 0.9rem;">
         </div>
 
+        <!-- ================= STEP 1: PROFILING ================= -->
         <div id="step-1" class="step-panel active">
             <div class="step-indicator">Tahap 1 dari 4</div>
             <h1 class="ios-large-title">Data Objek</h1>
@@ -169,6 +180,7 @@
             <button class="btn-primary" onclick="goToStep(2)">Lanjut ke Pengambilan Visual ➔</button>
         </div>
 
+        <!-- ================= STEP 2: ROADMAP VISUAL ================= -->
         <div id="step-2" class="step-panel">
             <div class="step-indicator">Tahap 2 dari 4</div>
             <h1 class="ios-large-title">Roadmap Visual</h1>
@@ -189,6 +201,7 @@
             </div>
         </div>
 
+        <!-- ================= STEP 3: UPLOAD & GENERATE ================= -->
         <div id="step-3" class="step-panel">
             <div class="step-indicator">Tahap 3 dari 4</div>
             <h1 class="ios-large-title">Eksekusi AI</h1>
@@ -210,6 +223,7 @@
             <button class="btn-secondary" onclick="goToStep(2)">⬅ Kembali ke Checklist</button>
         </div>
 
+        <!-- ================= STEP 4: PREVIEW & VALIDATION ================= -->
         <div id="step-4" class="step-panel">
             <div class="step-indicator">Tahap 4 dari 4</div>
             <h1 class="ios-large-title">Validasi Akhir</h1>
@@ -218,7 +232,21 @@
             <div class="section-title">1. Naskah Voice Over (VO)</div>
             <div class="ios-card" style="padding: 16px;">
                 <textarea id="output-vo" class="editable-textarea"></textarea>
+                
+                <!-- Tombol Action untuk VO -->
                 <button class="btn-primary" onclick="copyText('output-vo')" style="margin-top: 12px; background: #EBF2EE; color: var(--ios-primary);">📋 Salin Naskah VO</button>
+                <button class="btn-primary" onclick="window.open('https://aistudio.google.com/generate-speech?model=gemini-3.1-flash-tts-preview', '_blank')" style="margin-top: 8px; background: #000;">🎙️ Proses Audio (AI Studio)</button>
+
+                <!-- Panduan AI Studio -->
+                <div class="guide-box">
+                    <span style="display:block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem;">💡 Panduan AI Studio:</span>
+                    1. Pilih Speaker: <strong>Lapetus</strong><br>
+                    2. Isi kolom <em>Sample context</em> dengan setting berikut:<br>
+                    <div class="context-copy-box" onclick="copyTTSContext()">
+                        <span id="tts-context-text">Soft-spoken, Deep, Raspy, Middle-aged, Warm, Sincere, Reflective, Contemplative, Soothing, Calming, Intimate, Conversational, Heartwarming</span>
+                        <br><small style="color:var(--ios-primary); font-weight:bold; margin-top:6px; display:inline-block;">(Ketuk untuk menyalin konteks)</small>
+                    </div>
+                </div>
             </div>
 
             <div class="section-title">2. Caption & Komentar Sosmed</div>
@@ -522,6 +550,12 @@ Aturan Penulisan Kolom Komentar (Terpisah dari Caption, tandai dengan garis "---
             const txt = document.getElementById(elemId).value;
             navigator.clipboard.writeText(txt);
             alert("✓ Teks berhasil disalin!");
+        }
+
+        function copyTTSContext() {
+            const txt = document.getElementById('tts-context-text').innerText;
+            navigator.clipboard.writeText(txt);
+            alert("✓ Sampel konteks berhasil disalin!");
         }
 
         function resetProject() {
