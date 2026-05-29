@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#139F46">
+
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     
@@ -193,4 +196,361 @@
 
             <div class="ios-card">
                 <div class="form-group" style="border:none;">
-                    <input type="file" id="video-input" accept="video/*" multiple style="display
+                    <input type="file" id="video-input" accept="video/*" multiple style="display: none;" onchange="handleMultipleVideoUpload(this)">
+                    <div class="video-upload-zone" onclick="document.getElementById('video-input').click()">
+                        <span class="upload-icon">📹</span>
+                        <span class="upload-text">Upload Video Lapangan</span>
+                        <p class="upload-subtext">Ketuk untuk memilih 1 atau lebih video</p>
+                    </div>
+                    <div id="video-preview-container"></div>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="btn-generate" onclick="generateAllContent()" style="background: #000;">✨ Generate Naskah & Caption</button>
+            <button class="btn-secondary" onclick="goToStep(2)">⬅ Kembali ke Checklist</button>
+        </div>
+
+        <div id="step-4" class="step-panel">
+            <div class="step-indicator">Tahap 4 dari 4</div>
+            <h1 class="ios-large-title">Validasi Akhir</h1>
+            <p class="ios-subtitle">Lakukan penyesuaian teks sebelum disalin (Human-in-the-loop).</p>
+
+            <div class="section-title">1. Naskah Voice Over (VO)</div>
+            <div class="ios-card" style="padding: 16px;">
+                <textarea id="output-vo" class="editable-textarea"></textarea>
+                <button class="btn-primary" onclick="copyText('output-vo')" style="margin-top: 12px; background: #EBF2EE; color: var(--ios-primary);">📋 Salin Naskah VO</button>
+            </div>
+
+            <div class="section-title">2. Caption & Komentar Sosmed</div>
+            <div class="ios-card" style="padding: 16px;">
+                <textarea id="output-caption" class="editable-textarea" style="border-left-color: #007AFF; min-height: 250px;"></textarea>
+                <button class="btn-primary" onclick="copyText('output-caption')" style="margin-top: 12px; background: #E5F0FF; color: #007AFF;">📋 Salin Caption</button>
+            </div>
+
+            <button class="btn-secondary" onclick="resetProject()" style="margin-top: 30px; color: #FF3B30;">🔄 Selesai & Buat Project Baru</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Database Footage Dinamis
+        const contentDB = {
+            pendidikan: {
+                sop: ["Hormati muruah pelajar, tunjukkan semangatnya, bukan keluh kesahnya.", "Posisikan bantuan sebagai apresiasi menuntut ilmu."],
+                perorangan: [
+                    { t: "Establishing (Wide)", d: "Suasana utuh sekolah/pesantren atau rumah santri dari luar." },
+                    { t: "Action (Medium)", d: "Mustahik sedang fokus belajar, membaca kitab, atau bersiap sekolah." },
+                    { t: "Detail (Close-Up)", d: "Sorot tajam pada lembaran buku, tangan yang mencatat, atau sarana yang rusak." },
+                    { t: "Empathy (Interaksi)", d: "Interaksi senyum dengan guru/teman (tidak melihat kamera)." },
+                    { t: "B-Roll Bantuan", d: "Penyerahan beasiswa/alat tulis, terlihat logo LAZ natural." }
+                ],
+                lembaga: [
+                    { t: "Establishing (Wide)", d: "Suasana gedung TPQ/Madrasah beserta aktivitas komunal santri." },
+                    { t: "Action (Medium)", d: "Aktivitas belajar mengajar secara klasikal/kelompok." },
+                    { t: "Detail (Close-Up)", d: "Kondisi fisik bangunan (atap/dinding/meja) yang butuh bantuan." },
+                    { t: "Empathy (Interaksi)", d: "Kehangatan pengajar membimbing para santri." },
+                    { t: "B-Roll Bantuan", d: "Penyerahan simbolis bantuan sarana kepada pengurus lembaga." }
+                ]
+            },
+            ekonomi: {
+                sop: ["Jangan beri kesan mengasihani dari atas.", "Tonjolkan keringat bekerja, prospek kemandirian usaha."],
+                perorangan: [
+                    { t: "Establishing (Wide)", d: "Lokasi lapak/tempat usaha mustahik dengan latar belakang sekitar." },
+                    { t: "Action (Medium)", d: "Pergerakan fisik mustahik bekerja (mengaduk, memikul, dll)." },
+                    { t: "Detail (Close-Up)", d: "Fokus pada tangan yang mengolah produk atau alat kerja utama." },
+                    { t: "Empathy (Interaksi)", d: "Melayani pembeli atau berbincang akrab dengan relawan." },
+                    { t: "B-Roll Bantuan", d: "Penyerahan modal/gerobak usaha." }
+                ],
+                lembaga: [
+                    { t: "Establishing (Wide)", d: "Lahan kelompok tani / workshop pemberdayaan secara luas." },
+                    { t: "Action (Medium)", d: "Anggota komunitas bekerja sama/memproduksi barang." },
+                    { t: "Detail (Close-Up)", d: "Hasil panen atau produk akhir yang diciptakan komunitas." },
+                    { t: "Empathy (Interaksi)", d: "Diskusi antar anggota atau ketua komunitas memberikan arahan." },
+                    { t: "B-Roll Bantuan", d: "Penyerahan alat produksi/mesin untuk komunitas." }
+                ]
+            },
+            dakwah: {
+                sop: ["Tampilkan wibawa da'i di pelosok desa.", "Sorot antusiasme masyarakat tanpa menggurui."],
+                perorangan: [
+                    { t: "Establishing (Wide)", d: "Medan jalan menuju lokasi dakwah sang Da'i." },
+                    { t: "Action (Medium)", d: "Da'i sedang mengajar jamaah/anak didik." },
+                    { t: "Detail (Close-Up)", d: "Wajah antusias jamaah atau Al-Qur'an yang dibaca." },
+                    { t: "Empathy", d: "Kehangatan ngobrol da'i dengan warga." },
+                    { t: "B-Roll Bantuan", d: "Momen serah terima kafalah da'i." }
+                ],
+                lembaga: [
+                    { t: "Establishing (Wide)", d: "Kondisi fisik Masjid/Musholla di pedalaman." },
+                    { t: "Action (Medium)", d: "Aktivitas syiar/ibadah warga di masjid tersebut." },
+                    { t: "Detail (Close-Up)", d: "Fasilitas masjid yang kurang memadai (tempat wudhu, karpet)." },
+                    { t: "Empathy", d: "Gotong royong warga merawat masjid." },
+                    { t: "B-Roll Bantuan", d: "Penyerahan bantuan material perbaikan masjid." }
+                ]
+            },
+            kemanusiaan: {
+                sop: ["Fokus ketangguhan penyintas & semangat gotong royong.", "Hindari eksploitasi kesedihan ekstrem."],
+                perorangan: [
+                    { t: "Establishing", d: "Kondisi rumah mustahik (janda/lansia/duafa) dari luar." },
+                    { t: "Action", d: "Aktivitas harian bertahan hidup di rumah." },
+                    { t: "Detail", d: "Detail kondisi dapur, atap bocor, atau makanan seadanya." },
+                    { t: "Empathy", d: "Senyum penyintas saat didatangi relawan." },
+                    { t: "B-Roll Bantuan", d: "Penyerahan sembako/bantuan biaya hidup." }
+                ],
+                lembaga: [
+                    { t: "Establishing", d: "Kondisi riil lingkungan pasca bencana skala luas." },
+                    { t: "Action", d: "Warga/relawan gotong royong membersihkan area." },
+                    { t: "Detail", d: "Puing-puing atau posko darurat." },
+                    { t: "Empathy", d: "Interaksi saling menguatkan antar warga." },
+                    { t: "B-Roll Bantuan", d: "Distribusi logistik/dapur umum." }
+                ]
+            }
+        };
+
+        let currentJenis = 'perorangan';
+        let selectedVideos = [];
+
+        // --- INIT & API KEY ---
+        function saveApiKey(key) { localStorage.setItem('together_api_key', key.trim()); checkApiKey(); }
+        function checkApiKey() {
+            const key = localStorage.getItem('together_api_key');
+            const status = document.getElementById('api-status-text');
+            if (key && key.length > 20) { status.innerText = "✓ Tersambung"; status.style.color = "#007AFF"; document.getElementById('input-api-key').value = key; } 
+            else { status.innerText = "Belum Diatur"; status.style.color = "#FF3B30"; }
+        }
+
+        // --- STEP WIZARD NAVIGATION ---
+        function goToStep(stepNum) {
+            if (stepNum === 2) buildRoadmapVisual(); 
+            
+            document.querySelectorAll('.step-panel').forEach(el => el.classList.remove('active'));
+            document.getElementById('step-' + stepNum).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // --- STEP 1: LOGIC ---
+        function setJenis(tipe) {
+            currentJenis = tipe;
+            document.getElementById('btn-perorangan').classList.toggle('active', tipe === 'perorangan');
+            document.getElementById('btn-lembaga').classList.toggle('active', tipe === 'lembaga');
+            
+            if (tipe === 'perorangan') {
+                document.getElementById('label-nama').innerText = "Nama Mustahik";
+                document.getElementById('input-nama').placeholder = "Contoh: Pak Budi";
+                document.getElementById('label-usia').innerText = "Usia";
+                document.getElementById('input-usia').placeholder = "Contoh: 45 Tahun";
+            } else {
+                document.getElementById('label-nama').innerText = "Nama Lembaga / Komunitas";
+                document.getElementById('input-nama').placeholder = "Contoh: TPQ Al-Ikhlas";
+                document.getElementById('label-usia').innerText = "Jml Anggota / Tahun Berdiri";
+                document.getElementById('input-usia').placeholder = "Contoh: 50 Santri";
+            }
+        }
+
+        // --- STEP 2: LOGIC (DYNAMIC ROADMAP) ---
+        function buildRoadmapVisual() {
+            const program = document.getElementById('input-program').value;
+            const data = contentDB[program];
+            const footageList = data[currentJenis];
+            
+            let html = '';
+            footageList.forEach((ftg, idx) => {
+                html += `
+                <label class="checklist-item">
+                    <input type="checkbox" class="ios-checkbox" onchange="updateProgress()">
+                    <div class="checklist-text"><strong>${ftg.t}</strong><span>${ftg.d}</span></div>
+                </label>`;
+            });
+            document.getElementById('panel-footage').innerHTML = html;
+
+            let sopHtml = '';
+            data.sop.forEach((s, i) => sopHtml += `<div style="padding: 10px 0; border-bottom: 0.5px solid var(--ios-border); font-size:0.9rem;"><strong>0${i+1}.</strong> ${s}</div>`);
+            document.getElementById('panel-sop').innerHTML = sopHtml;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('#panel-footage .ios-checkbox');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const total = checkboxes.length;
+            const pct = (checked / total) * 100;
+            
+            document.getElementById('footage-progress').style.width = pct + '%';
+            document.getElementById('footage-count').innerText = `${checked}/${total} Footage Diambil`;
+            
+            const btnUpload = document.getElementById('btn-to-upload');
+            if(checked === total) { btnUpload.style.background = "#139F46"; btnUpload.innerText = "Checklist Selesai, Lanjut Upload ➔"; } 
+            else { btnUpload.style.background = "#1C1C1E"; btnUpload.innerText = "Abaikan & Lanjut Upload ➔"; }
+        }
+
+        // --- STEP 3: VIDEO UPLOAD ---
+        function handleMultipleVideoUpload(input) {
+            Array.from(input.files).forEach(file => {
+                selectedVideos.push({ id: Date.now() + Math.random(), file: file, url: URL.createObjectURL(file) });
+            });
+            input.value = ""; renderVideoPreviews();
+        }
+        function removeVideo(id) { selectedVideos = selectedVideos.filter(v => v.id !== id); renderVideoPreviews(); }
+        function renderVideoPreviews() {
+            const c = document.getElementById('video-preview-container'); c.innerHTML = '';
+            selectedVideos.forEach(v => {
+                c.innerHTML += `<div class="video-item-wrapper"><button class="btn-remove-video" onclick="removeVideo(${v.id})">✕</button><video id="vid-${v.id}" src="${v.url}" playsinline muted></video></div>`;
+            });
+        }
+        function extractFrame(vidEl) {
+            return new Promise(res => {
+                vidEl.currentTime = (vidEl.duration && !isNaN(vidEl.duration)) ? vidEl.duration * 0.5 : 2;
+                vidEl.onseeked = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 400; canvas.height = 400 * (vidEl.videoHeight/vidEl.videoWidth);
+                    canvas.getContext('2d').drawImage(vidEl, 0, 0, canvas.width, canvas.height);
+                    res(canvas.toDataURL('image/jpeg', 0.6));
+                };
+            });
+        }
+
+        // --- STEP 4: AI GENERATION ---
+        async function generateAllContent() {
+            const apiKey = localStorage.getItem('together_api_key');
+            if (!apiKey) return alert("API Key belum diatur!");
+            
+            const btn = document.getElementById('btn-generate');
+            btn.disabled = true; btn.innerText = "⏳ Memproses Data & Visual...";
+
+            // Kumpulkan Data Form
+            const pData = {
+                program: document.getElementById('input-program').options[document.getElementById('input-program').selectedIndex].text,
+                tipe: currentJenis === 'perorangan' ? 'Perorangan' : 'Lembaga/Komunitas',
+                nama: document.getElementById('input-nama').value || "-",
+                usia: document.getElementById('input-usia').value || "-",
+                lokasi: document.getElementById('input-alamat').value || "-",
+                latar: document.getElementById('input-latar').value || "-",
+                tujuan: document.getElementById('input-alasan').value || "-"
+            };
+
+            const dataContext = `
+[DATA FAKTA LAPANGAN]
+- Program: ${pData.program}
+- Kategori Entitas: ${pData.tipe}
+- Nama: ${pData.nama} (${currentJenis === 'perorangan' ? 'Usia: ' : 'Info: '} ${pData.usia})
+- Lokasi: ${pData.lokasi}
+- Latar Belakang Riil: ${pData.latar}
+- Target Bantuan: ${pData.tujuan}`;
+
+            // Ekstrak Visual
+            let visualContent = [];
+            for (let v of selectedVideos) {
+                try {
+                    const uri = await extractFrame(document.getElementById(`vid-${v.id}`));
+                    visualContent.push({ type: "image_url", image_url: { url: uri } });
+                } catch(e) {}
+            }
+
+            // --- PROMPT 1: VO ---
+            btn.innerText = "⏳ Menulis Naskah Voice Over...";
+            const promptVO = `TUGAS: Tulis naskah narasi Voice Over (VO) yang siap dibaca.
+
+ATURAN PALING PENTING & MUTLAK:
+MULAI TEKS LANGSUNG DENGAN KALIMAT PERTAMA NARASI!
+DILARANG KERAS menggunakan kata "Assalamualaikum", "Halo", sapaan apapun di awal, dan DILARANG KERAS menggunakan "Wassalamualaikum" di akhir.
+OUTPUT HANYA BERISI TEKS VO SAJA, TANPA JUDUL, TANPA CATATAN APAPUN.
+
+${dataContext}
+
+PANDUAN GAYA BAHASA:
+1. Angkat martabat dan ketangguhan mereka. Jangan memelas/memancing kasihan.
+2. Bantuan posisikan sebagai apresiasi kepedulian.
+3. Durasi 30-45 detik membaca. Bahasa baku, mengalir, puitis.`;
+
+            let voResult = "Gagal memproses VO.";
+            try {
+                voResult = await callGemma(apiKey, promptVO, visualContent, "Tulis langsung narasi utamanya. Jangan tambahkan Assalamualaikum atau kata pengantar apapun.");
+                document.getElementById('output-vo').value = voResult;
+            } catch(e) { document.getElementById('output-vo').value = `Error: ${e.message}`; }
+
+            // --- PROMPT 2: CAPTION & KOMENTAR ---
+            btn.innerText = "⏳ Meracik Strategi Sosmed...";
+            const promptCap = `TUGAS: Buatkan teks caption media sosial (FB/IG/Threads) dan satu teks untuk kolom komentar.
+
+ATURAN PALING PENTING: DILARANG KERAS menggunakan kata salam pembuka atau penutup (seperti Assalamualaikum/Wassalamualaikum). AWALI LANGSUNG DENGAN HOOK!
+
+Data Lapangan Mentah:
+${dataContext}
+
+Referensi Naskah VO: 
+"${voResult}"
+
+Aturan & Format Penulisan Caption:
+- Batas Karakter: Maksimal 500 karakter (termasuk spasi, emoji, dan hashtag).
+- Hook (Kalimat Pembuka): Menarik perhatian dalam 1-2 detik pertama, pendekatan emosional/inspiratif, sertakan 1-2 emoji relevan.
+- Body (Isi): Rangkum inti sari data menjadi 1-2 kalimat padat, jelas, informatif, dan profesional.
+- Call-to-Action (CTA): Gunakan soft-selling berfokus pada engagement organik (Share, Save, komentar dukungan).
+- Hashtag: Berikan 5-6 hashtag sangat relevan dan SEO-friendly.
+- Gaya Bahasa: Profesional, menggugah empati, positif.
+
+Aturan Penulisan Kolom Komentar (Terpisah dari Caption, tandai dengan garis "---"):
+- Buatkan satu CTA khusus untuk disematkan (pinned comment).
+- Gaya Bahasa CTA Komentar: Tegas, menggugah, menantang audiens bertindak nyata.
+- Format Kalimat Komentar: Gunakan pola "Buktikan kepedulian kita nyata, bukan sekadar kata-kata. Ambil peran wujudkan [Tujuan/Misi Utama] di sini:"
+- Sertakan tautan pendek (contoh: 👉 https://s.id/[nama-link]).`;
+
+            try {
+                const capResult = await callGemma(apiKey, promptCap, visualContent, "Tulis caption langsung tanpa salam. Kerjakan sesuai format yang diminta.");
+                document.getElementById('output-caption').value = capResult;
+            } catch(e) { document.getElementById('output-caption').value = `Error: ${e.message}`; }
+
+            // Berpindah ke Step 4 setelah selesai
+            btn.disabled = false; btn.innerText = "✨ Generate Naskah & Caption";
+            goToStep(4);
+        }
+
+        async function callGemma(apiKey, systemPrompt, visualContentArray, userInstruction) {
+            let userContent = [{ type: "text", text: userInstruction }].concat(visualContentArray);
+            
+            const res = await fetch("https://api.together.xyz/v1/chat/completions", {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({
+                    model: "google/gemma-3n-E4B-it", 
+                    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContent }],
+                    max_tokens: 800, temperature: 0.7
+                })
+            });
+            if (!res.ok) throw new Error("Gagal terhubung ke Together AI");
+            return (await res.json()).choices[0].message.content.trim();
+        }
+
+        // --- UTILS ---
+        function copyText(elemId) {
+            const txt = document.getElementById(elemId).value;
+            navigator.clipboard.writeText(txt);
+            alert("✓ Teks berhasil disalin!");
+        }
+
+        function resetProject() {
+            if(confirm("Yakin ingin mereset formulir untuk project baru?")) {
+                document.querySelectorAll('.ios-input, .ios-textarea').forEach(el => {
+                    if(el.id !== 'input-api-key') el.value = '';
+                });
+                selectedVideos = [];
+                document.getElementById('video-preview-container').innerHTML = '';
+                document.getElementById('output-vo').value = '';
+                document.getElementById('output-caption').value = '';
+                goToStep(1);
+            }
+        }
+
+        // --- Registrasi Service Worker ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('Service Worker berhasil didaftarkan:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker gagal didaftarkan:', error);
+                    });
+            });
+        }
+
+        checkApiKey();
+    </script>
+</body>
+</html>
