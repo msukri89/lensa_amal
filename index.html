@@ -94,7 +94,6 @@
 
     <div class="container">
         
-        <!-- PENGATURAN API KEY -->
         <div class="ios-card" style="padding: 12px 16px;">
             <div class="api-badge" style="margin-bottom: 8px;">
                 <div style="font-weight:600; font-size:0.9rem;">API Together (Gemma 3)</div>
@@ -103,7 +102,6 @@
             <input type="password" id="input-api-key" class="ios-input" placeholder="Tempel API Key di sini..." oninput="saveApiKey(this.value)" style="font-size: 0.9rem;">
         </div>
 
-        <!-- ================= STEP 1: PROFILING ================= -->
         <div id="step-1" class="step-panel active">
             <div class="step-indicator">Tahap 1 dari 4</div>
             <h1 class="ios-large-title">Data Objek</h1>
@@ -158,7 +156,6 @@
             <button class="btn-primary" onclick="goToStep(2)">Lanjut ke Pengambilan Visual ➔</button>
         </div>
 
-        <!-- ================= STEP 2: ROADMAP VISUAL ================= -->
         <div id="step-2" class="step-panel">
             <div class="step-indicator">Tahap 2 dari 4</div>
             <h1 class="ios-large-title">Roadmap Visual</h1>
@@ -179,7 +176,6 @@
             </div>
         </div>
 
-        <!-- ================= STEP 3: UPLOAD & GENERATE ================= -->
         <div id="step-3" class="step-panel">
             <div class="step-indicator">Tahap 3 dari 4</div>
             <h1 class="ios-large-title">Eksekusi AI</h1>
@@ -201,7 +197,6 @@
             <button class="btn-secondary" onclick="goToStep(2)">⬅ Kembali ke Checklist</button>
         </div>
 
-        <!-- ================= STEP 4: PREVIEW & VALIDATION ================= -->
         <div id="step-4" class="step-panel">
             <div class="step-indicator">Tahap 4 dari 4</div>
             <h1 class="ios-large-title">Validasi Akhir</h1>
@@ -261,7 +256,6 @@
                     { t: "B-Roll Bantuan", d: "Penyerahan alat produksi/mesin untuk komunitas." }
                 ]
             },
-            // Dakwah & Kemanusiaan dibuat sama polanya untuk efisiensi
             dakwah: {
                 sop: ["Tampilkan wibawa da'i di pelosok desa.", "Sorot antusiasme masyarakat tanpa menggurui."],
                 perorangan: [
@@ -312,7 +306,7 @@
 
         // --- STEP WIZARD NAVIGATION ---
         function goToStep(stepNum) {
-            if (stepNum === 2) buildRoadmapVisual(); // Generate checklist before entering step 2
+            if (stepNum === 2) buildRoadmapVisual(); 
             
             document.querySelectorAll('.step-panel').forEach(el => el.classList.remove('active'));
             document.getElementById('step-' + stepNum).classList.add('active');
@@ -369,7 +363,6 @@
             document.getElementById('footage-progress').style.width = pct + '%';
             document.getElementById('footage-count').innerText = `${checked}/${total} Footage Diambil`;
             
-            // Rekomendasi tombol (tetap bisa lanjut, tapi di-highlight jika sudah 100%)
             const btnUpload = document.getElementById('btn-to-upload');
             if(checked === total) { btnUpload.style.background = "#139F46"; btnUpload.innerText = "Checklist Selesai, Lanjut Upload ➔"; } 
             else { btnUpload.style.background = "#1C1C1E"; btnUpload.innerText = "Abaikan & Lanjut Upload ➔"; }
@@ -401,7 +394,7 @@
             });
         }
 
-        // --- STEP 4: AI GENERATION (ONE CLICK FOR BOTH) ---
+        // --- STEP 4: AI GENERATION ---
         async function generateAllContent() {
             const apiKey = localStorage.getItem('together_api_key');
             if (!apiKey) return alert("API Key belum diatur!");
@@ -444,10 +437,12 @@
 Tugas: Tulis naskah narasi Voice Over (VO) langsung baca berdasarkan data berikut.
 ${dataContext}
 
-ATURAN:
+ATURAN MUTLAK:
 1. Angkat martabat dan ketangguhan mereka. Jangan memelas/memancing kasihan.
 2. Bantuan posisikan sebagai apresiasi kepedulian.
-3. Durasi 30-45 detik membaca. Bahasa baku, mengalir, puitis. HANYA TEKS VO, tanpa judul/catatan.`;
+3. Durasi 30-45 detik membaca. Bahasa baku, mengalir, puitis. 
+4. HANYA TEKS VO, tanpa judul/catatan.
+5. DILARANG KERAS menggunakan salam pembuka (seperti Assalamualaikum) dan salam penutup (seperti Wassalamualaikum). Biarkan narasi mengalir langsung, tanpa awalan sapaan dan akhiran salam.`;
 
             let voResult = "Gagal memproses VO.";
             try {
@@ -457,20 +452,29 @@ ATURAN:
 
             // --- PROMPT 2: CAPTION & KOMENTAR ---
             btn.innerText = "⏳ Meracik Strategi Sosmed...";
-            const promptCap = `Kamu adalah Pakar SEO Media Sosial LAZ Sidogiri.
-Tugas: Buat Caption & Teks Komentar (Pinned) untuk postingan dengan narasi VO berikut: "${voResult}".
-Data Lapangan:
+            const promptCap = `Anda adalah seorang Copywriter Profesional dan Pakar SEO Media Sosial (Facebook, Instagram, Threads).
+Tugas:
+Buatkan teks caption media sosial dan satu teks untuk kolom komentar berdasarkan data mentah lapangan dan referensi naskah VO berikut:
+Naskah VO: "${voResult}"
+
+Data Lapangan Mentah:
 ${dataContext}
 
-ATURAN CAPTION:
-- Maks 500 karakter. Hook emosional (1-2 detik pertama baca).
-- Body padat.
-- CTA: Soft-selling (Share/Save/Komen dukungan).
-- Hashtag: 5-6 relevan.
+Aturan & Format Penulisan Caption:
+- Batas Karakter: Maksimal 500 karakter (termasuk spasi, emoji, dan hashtag).
+- Struktur Caption:
+  * Hook (Kalimat Pembuka): Menarik perhatian dalam 1-2 detik pertama, gunakan pendekatan emosional/inspiratif, sertakan 1-2 emoji yang relevan.
+  * Body (Isi): Rangkum inti sari data/artikel menjadi 1-2 kalimat yang padat, jelas, informatif, dan profesional.
+  * Call-to-Action (CTA) Caption: Gunakan soft-selling yang berfokus pada engagement organik (contoh: ajakan untuk Share, Save, atau memberikan komentar dukungan).
+  * Hashtag: Berikan 5-6 hashtag yang sangat relevan dan SEO-friendly (kombinasi hashtag umum, niche, dan spesifik lokasi/brand).
+- Gaya Bahasa: Profesional, menggugah empati, positif, dan tidak bertele-tele.
+- DILARANG KERAS menggunakan kata salam pembuka/penutup (seperti Assalamualaikum/Wassalamualaikum).
 
-ATURAN KOMENTAR (Pisahkan dengan garis "---"):
-- Satu kalimat CTA hard-selling menggugah aksi donasi.
-- Gunakan link: 👉 https://s.id/[nama-link]`;
+Aturan Penulisan Kolom Komentar (Terpisah dari Caption, tandai dengan garis "---"):
+- Buatkan satu CTA khusus untuk disematkan (pinned comment) di kolom komentar.
+- Gaya Bahasa CTA Komentar: Tegas, menggugah, menantang audiens untuk bertindak nyata (mengambil tindakan), dan langsung tertuju pada konversi/donasi/partisipasi.
+- Format Kalimat Komentar: Gunakan pola seperti "Buktikan kepedulian kita nyata, bukan sekadar kata-kata. Ambil peran wujudkan [Tujuan/Misi Utama] di sini:"
+- Sertakan tautan pendek (contoh: 👉 https://s.id/[nama-link]).`;
 
             try {
                 const capResult = await callGemma(apiKey, promptCap, visualContent);
@@ -483,7 +487,7 @@ ATURAN KOMENTAR (Pisahkan dengan garis "---"):
         }
 
         async function callGemma(apiKey, systemPrompt, visualContentArray) {
-            let userContent = [{ type: "text", text: "Kerjakan sesuai instruksi berdasarkan data lapangan." }].concat(visualContentArray);
+            let userContent = [{ type: "text", text: "Kerjakan sesuai instruksi mutlak tanpa ada pembukaan dan akhiran salam berdasarkan data lapangan." }].concat(visualContentArray);
             
             const res = await fetch("https://api.together.xyz/v1/chat/completions", {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
