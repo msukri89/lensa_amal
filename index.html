@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LensaAmal - Together AI (Gemma)</title>
+    <title>LensaAmal - AI Content Production</title>
     <style>
         :root {
             --ios-bg: #F2F2F7;
@@ -33,7 +33,7 @@
 
         h4.section-title { 
             margin-left: 16px; margin-bottom: 8px; margin-top: 28px;
-            color: var(--ios-subtext); font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; 
+            color: var(--ios-subtext); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; 
         }
 
         .ios-card { background-color: var(--ios-card); border-radius: 12px; padding: 0 16px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); overflow: hidden; }
@@ -44,6 +44,7 @@
         .ios-input, .ios-textarea { width: 100%; border: none; font-size: 1rem; color: var(--ios-text); background: transparent; outline: none; }
         .ios-textarea { resize: vertical; min-height: 60px; line-height: 1.4; }
         .ios-input::placeholder, .ios-textarea::placeholder { color: #C7C7CC; }
+        .flex-row { display: flex; gap: 12px; }
 
         .api-badge { background: #76768015; border-radius: 8px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
         .api-status { font-size: 0.85rem; font-weight: 600; color: #FF3B30; }
@@ -56,13 +57,13 @@
         .upload-text { font-size: 0.9rem; color: var(--ios-primary); font-weight: 600; }
         .upload-subtext { font-size: 0.75rem; color: var(--ios-subtext); margin-top: 2px; }
         
-        /* Multiple Video Previews */
         #video-preview-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
         .video-item-wrapper { position: relative; width: calc(50% - 4px); border-radius: 8px; overflow: hidden; background: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .video-item-wrapper video { width: 100%; display: block; height: 120px; object-fit: cover; }
         .btn-remove-video { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; font-weight: 700; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; }
 
         .btn-generate { background: #1C1C1E; color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; margin: 16px 0; cursor: pointer; }
+        .btn-generate.sosmed { background: #007AFF; margin-top: 0; }
         .btn-generate:disabled { background: #AEAEB2; cursor: not-allowed; }
         .btn-copy { background: #EBF2EE; color: var(--ios-primary); border: none; padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; margin-top: 12px; cursor: pointer; width: 100%; }
 
@@ -70,14 +71,17 @@
         .narasi-text { font-size: 1.05rem; line-height: 1.5; border-left: 4px solid var(--ios-primary); padding: 12px; background: #fafafa; border-radius: 0 8px 8px 0; min-height: 60px; white-space: pre-wrap; }
         .ai-status-tag { display: inline-block; background: #EBF2EE; color: var(--ios-primary); font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; }
 
-        .list-item { padding: 14px 0; border-bottom: 0.5px solid var(--ios-border); font-size: 0.95rem; line-height: 1.4; }
+        .list-item { padding: 12px 0; border-bottom: 0.5px solid var(--ios-border); font-size: 0.95rem; line-height: 1.4; }
         .list-item strong { color: var(--ios-primary); }
+        .list-item:last-child { border-bottom: none; }
 
         .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(242, 242, 247, 0.85); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: 0.5px solid var(--ios-border); display: flex; justify-content: space-around; align-items: center; padding: 10px 5px calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
         .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--ios-subtext); text-decoration: none; cursor: pointer; flex: 1; }
         .tab-item.active { color: var(--ios-primary); }
         .tab-item svg { width: 22px; height: 22px; margin-bottom: 4px; stroke-width: 1.5; stroke: currentColor; fill: none; }
         .tab-label { font-size: 0.6rem; font-weight: 500; text-align: center; }
+        
+        .draft-notice { font-size: 0.75rem; color: #34C759; text-align: right; margin-top: -10px; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
@@ -86,7 +90,7 @@
 
     <div class="container">
         
-        <!-- PENGATURAN API KEY TOGETHER AI -->
+        <!-- PENGATURAN API KEY -->
         <div class="ios-card" style="margin-top: 10px; padding: 12px 16px;">
             <div class="api-badge">
                 <div>
@@ -104,59 +108,80 @@
             <p class="ios-subtitle" id="display-subtitle">Bantuan Beasiswa & Sarana</p>
         </div>
 
+        <h4 class="section-title">Checklist Footage (Wajib Diambil)</h4>
+        <div class="ios-card" id="panel-footage"></div>
+
         <h4 class="section-title">Persiapan & Etika (SOP)</h4>
         <div class="ios-card" id="panel-sop"></div>
 
-        <!-- INPUT VIDEO -->
+        <!-- INPUT REALITA LAPANGAN -->
         <h4 class="section-title">Input Realita Lapangan</h4>
+        <div id="draft-notice" class="draft-notice">✓ Draft tersimpan otomatis</div>
         <div class="ios-card">
             <div class="form-group">
                 <label class="form-label">Video Lapangan (Bisa lebih dari 1)</label>
-                <!-- Tambah atribut 'multiple' agar bisa pilih banyak file -->
                 <input type="file" id="video-input" accept="video/*" multiple style="display: none;" onchange="handleMultipleVideoUpload(this)">
                 
                 <div class="video-upload-zone" onclick="document.getElementById('video-input').click()">
                     <span class="upload-icon">📹</span>
                     <span class="upload-text">Upload Video Lapangan</span>
-                    <p class="upload-subtext">Ketuk untuk menambah video</p>
+                    <p class="upload-subtext">Ketuk untuk menambah video referensi AI</p>
                 </div>
-
-                <!-- Wadah untuk menampung banyak preview video -->
                 <div id="video-preview-container"></div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Nama Mustahik / Objek</label>
-                <input type="text" id="input-nama" class="ios-input" placeholder="Contoh: Si Fulan / Warga Desa">
+            <div class="flex-row">
+                <div class="form-group" style="flex: 2;">
+                    <label class="form-label">Nama Mustahik / Objek</label>
+                    <input type="text" id="input-nama" class="ios-input auto-save" placeholder="Contoh: Si Fulan / Warga Desa">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Usia</label>
+                    <input type="number" id="input-usia" class="ios-input auto-save" placeholder="Contoh: 45">
+                </div>
             </div>
+            
             <div class="form-group">
                 <label class="form-label">Lokasi / Alamat</label>
-                <input type="text" id="input-alamat" class="ios-input" placeholder="Contoh: Pasuruan">
+                <input type="text" id="input-alamat" class="ios-input auto-save" placeholder="Contoh: Pasuruan">
             </div>
             <div class="form-group">
                 <label class="form-label">Kondisi / Latar Belakang Riil</label>
-                <textarea id="input-latar" class="ios-textarea" placeholder="Tulis kondisi aslinya (Ketik apa adanya saja, AI yang akan menyaring bahasanya)"></textarea>
+                <textarea id="input-latar" class="ios-textarea auto-save" placeholder="Tulis kondisi aslinya (Ketik apa adanya, AI akan menyaringnya)"></textarea>
             </div>
             <div class="form-group" style="border:none;">
                 <label class="form-label">Target Bantuan (Alasan Dibantu)</label>
-                <input type="text" id="input-alasan" class="ios-input" placeholder="Contoh: Bantuan sembako / perbaikan masjid">
+                <input type="text" id="input-alasan" class="ios-input auto-save" placeholder="Contoh: Bantuan sembako / perbaikan masjid">
             </div>
             
             <button class="btn-generate" id="btn-submit" onclick="generateNarasiWithTogether()">✨ Buat Narasi VO (Gemma AI)</button>
         </div>
 
-        <!-- HASIL DARI AI -->
-        <h4 class="section-title">Naskah VO Hasil AI</h4>
+        <!-- HASIL NARASI VO -->
+        <h4 class="section-title">1. Naskah VO Hasil AI</h4>
         <div class="ios-card">
             <div class="narasi-box">
                 <div id="ai-tag-container"></div>
-                <div id="text-copy-target" class="narasi-text"><em>Hasil analisis visual dan teks narasi bermartabat akan muncul di sini...</em></div>
-                <button class="btn-copy" onclick="copyText()">Salin Naskah VO</button>
+                <div id="text-copy-target" class="narasi-text"><em>Naskah Voice Over akan muncul di sini...</em></div>
+                <button class="btn-copy" onclick="copyText('text-copy-target')">Salin Naskah VO</button>
             </div>
+        </div>
+
+        <!-- HASIL CAPTION SOSMED -->
+        <h4 class="section-title">2. Caption & Komentar Sosmed</h4>
+        <div class="ios-card" style="padding-bottom: 16px;">
+            <div class="narasi-box">
+                <div id="caption-tag-container"></div>
+                <div id="caption-copy-target" class="narasi-text" style="border-left-color: #007AFF;"><em>Caption sosmed dan Pinned Comment akan muncul di sini...</em></div>
+                <div class="flex-row">
+                    <button class="btn-copy" style="color:#007AFF; background:#E5F0FF;" onclick="copyText('caption-copy-target')">Salin Teks Lengkap</button>
+                </div>
+            </div>
+            <button class="btn-generate sosmed" id="btn-caption" onclick="generateCaptionWithTogether()">📱 Generate Teks Sosmed</button>
         </div>
     </div>
 
-    <!-- NAVBAR BAWAH (4 PROGRAM) -->
+    <!-- NAVBAR BAWAH -->
     <nav class="tab-bar">
         <div class="tab-item active" id="nav-pendidikan" onclick="switchProgram('pendidikan')">
             <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
@@ -181,30 +206,49 @@
             pendidikan: { 
                 title: "Peduli Pendidikan", 
                 subtitle: "Bantuan Beasiswa & Sarana", 
+                footage: ["Close up ekspresi serius/tekun saat belajar atau mengaji.", "Detail buku, alat tulis, atau sarana yang digunakan.", "Suasana lingkungan sekolah/pesantren (Wide/Medium)."],
                 sop: ["Hormati muruah santri/pelajar, tunjukkan semangatnya, BUKAN keluh kesahnya.", "Posisikan bantuan sebagai apresiasi terhadap kesungguhannya menuntut ilmu."] 
             },
             ekonomi: { 
                 title: "Peduli Ekonomi", 
-                subtitle: "Modal Usaha & Pemberdayaan", 
+                subtitle: "Modal Usaha & Pemberdayaan",
+                footage: ["Close up tangan yang sedang bekerja (membuat produk/melayani).", "Hasil produk/dagangan yang dijual.", "Kondisi lokasi tempat usaha/lapak."], 
                 sop: ["Posisikan kamera sejajar. Jangan beri kesan mengasihani dari atas.", "Tonjolkan kerasnya keringat mereka bekerja, fokus pada prospek kemandirian usahanya."] 
             },
             dakwah: { 
                 title: "Peduli Dakwah", 
                 subtitle: "Dukungan Da'i & Syiar Islam", 
-                sop: ["Tampilkan wibawa dan keikhlasan para pendakwah di pelosok desa.", "Sorot antusiasme masyarakat/jamaah, dan hindari kesan menggurui atau merendahkan masyarakat sekitar."] 
+                footage: ["Aktivitas dakwah di masjid/langgar pedesaan.", "Interaksi da'i dengan jamaah/anak didik.", "Perjalanan menuju lokasi dakwah (jika akses sulit)."],
+                sop: ["Tampilkan wibawa dan keikhlasan para pendakwah di pelosok desa.", "Sorot antusiasme masyarakat/jamaah, dan hindari kesan menggurui."] 
             },
             kemanusiaan: { 
                 title: "Peduli Kemanusiaan", 
-                subtitle: "Tanggap Bencana & Lingkungan", 
+                subtitle: "Tanggap Bencana & Lingkungan",
+                footage: ["Kondisi riil lingkungan pasca bencana/krisis.", "Aktivitas gotong royong warga/relawan.", "Senyum ketangguhan penyintas."], 
                 sop: ["Fokus pada ketangguhan penyintas, kepedulian lingkungan, dan semangat gotong royong.", "Hindari mengeksploitasi kesedihan, tangisan, atau kerusakan fisik secara berlebihan."] 
             }
         };
 
         let currentProgram = 'pendidikan';
-        
-        // Array untuk menyimpan banyak video
         let selectedVideos = [];
 
+        // --- SISTEM AUTO-SAVE DRAFT ---
+        function initAutoSave() {
+            const inputs = document.querySelectorAll('.auto-save');
+            inputs.forEach(input => {
+                const savedValue = localStorage.getItem('draft_' + input.id);
+                if (savedValue) input.value = savedValue;
+
+                input.addEventListener('input', () => {
+                    localStorage.setItem('draft_' + input.id, input.value);
+                    const notice = document.getElementById('draft-notice');
+                    notice.style.display = 'block';
+                    setTimeout(() => { notice.style.display = 'none'; }, 2000);
+                });
+            });
+        }
+
+        // --- MANAJEMEN API KEY ---
         function saveApiKey(key) { localStorage.setItem('together_api_key', key.trim()); checkApiKey(); }
         function checkApiKey() {
             const savedKey = localStorage.getItem('together_api_key');
@@ -228,41 +272,35 @@
             const data = programData[currentProgram];
             document.getElementById('display-title').innerText = data.title;
             document.getElementById('display-subtitle').innerText = data.subtitle;
+            
+            let footHtml = '';
+            data.footage.forEach(item => { footHtml += `<div class="list-item">🎥 ${item}</div>`; });
+            document.getElementById('panel-footage').innerHTML = footHtml;
+
             let sopHtml = '';
             data.sop.forEach((item, index) => { sopHtml += `<div class="list-item"><strong>0${index+1}.</strong> ${item}</div>`; });
             document.getElementById('panel-sop').innerHTML = sopHtml;
         }
 
         // --- SISTEM MULTI-VIDEO ---
-
         function handleMultipleVideoUpload(input) {
             const files = Array.from(input.files);
             if (files.length === 0) return;
-
-            // Masukkan setiap file yang dipilih ke dalam array
             files.forEach(file => {
-                const id = Date.now() + Math.floor(Math.random() * 1000);
-                selectedVideos.push({
-                    id: id,
-                    file: file,
-                    url: URL.createObjectURL(file)
-                });
+                selectedVideos.push({ id: Date.now() + Math.floor(Math.random() * 1000), file: file, url: URL.createObjectURL(file) });
             });
-
-            input.value = ""; // Reset input file agar bisa pilih file yang sama lagi jika perlu
+            input.value = ""; 
             renderVideoPreviews();
         }
 
         function removeVideo(id) {
-            // Hapus video dari array berdasarkan ID
             selectedVideos = selectedVideos.filter(v => v.id !== id);
             renderVideoPreviews();
         }
 
         function renderVideoPreviews() {
             const container = document.getElementById('video-preview-container');
-            container.innerHTML = ''; // Bersihkan container
-
+            container.innerHTML = '';
             selectedVideos.forEach(video => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'video-item-wrapper';
@@ -276,142 +314,171 @@
 
         function extractFrameAtTime(videoElement, timeInSeconds) {
             return new Promise((resolve) => {
-                // Memastikan video sudah cukup dimuat informasinya
                 if (videoElement.readyState < 2) {
                     videoElement.addEventListener('loadeddata', seekAndExtract, { once: true });
-                } else {
-                    seekAndExtract();
-                }
+                } else { seekAndExtract(); }
 
                 function seekAndExtract() {
                     videoElement.currentTime = timeInSeconds;
                     videoElement.onseeked = () => {
                         const canvas = document.createElement('canvas');
-                        // Turunkan sedikit resolusi agar token API tidak jebol jika videonya banyak
                         const scale = Math.min(1, 512 / videoElement.videoWidth);
                         canvas.width = videoElement.videoWidth * scale;
                         canvas.height = videoElement.videoHeight * scale;
-                        
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                        
-                        const base64DataURI = canvas.toDataURL('image/jpeg', 0.65);
-                        resolve(base64DataURI);
+                        resolve(canvas.toDataURL('image/jpeg', 0.65));
                     };
                 }
             });
         }
 
-        async function generateNarasiWithTogether() {
+        // --- PENGOLAHAN AI ---
+        async function buildAiPayload(systemPromptText) {
             const apiKey = localStorage.getItem('together_api_key');
-            if (!apiKey) { alert("Masukkan API Key Together AI Anda terlebih dahulu!"); return; }
+            if (!apiKey) throw new Error("API Key belum diatur.");
 
             const nama = document.getElementById('input-nama').value.trim() || "Penerima Manfaat";
+            const usia = document.getElementById('input-usia').value.trim() || "Tidak diketahui";
             const alamat = document.getElementById('input-alamat').value.trim() || "Daerah setempat";
             const latar = document.getElementById('input-latar').value.trim() || "Mempunyai kondisi yang perlu didukung";
             const alasan = document.getElementById('input-alasan').value.trim() || "Penyaluran bantuan LAZ Sidogiri";
 
-            const btn = document.getElementById('btn-submit');
-            const targetText = document.getElementById('text-copy-target');
-            
-            btn.disabled = true;
-            btn.innerText = "⏳ Memproses Semua Video (Gemma AI)...";
-            targetText.innerText = "Gemma 3 sedang menganalisis rekaman lapangan & meracik narasi...";
+            let compiledPrompt = systemPromptText
+                .replace("{nama}", nama).replace("{usia}", usia)
+                .replace("{alamat}", alamat).replace("{latar}", latar)
+                .replace("{alasan}", alasan).replace("{program}", programData[currentProgram].title);
 
-            const systemPrompt = `Kamu adalah Copywriter & Voice Over (VO) senior untuk Lembaga Amil Zakat (LAZ) Sidogiri.
-Tugasmu memproduksi naskah narasi VO untuk video dokumentasi bantuan.
+            let userContent = [{ type: "text", text: "Kerjakan sesuai instruksi berdasarkan data lapangan yang dilampirkan." }];
 
-DATA:
-- Nama / Objek: ${nama}
-- Lokasi: ${alamat}
-- Realita Lapangan: ${latar}
-- Target Bantuan: ${alasan}
-- Program: ${programData[currentProgram].title}
-
-ATURAN MUTLAK:
-1. JANGAN menampakkan kesan kemiskinan yang memancing rasa kasihan/mengemis.
-2. Fokus pada KETANGGUHAN, SEMANGAT, MARTABAT, dan NILAI POSITIF.
-3. Posisikan bantuan LAZ Sidogiri sebagai APRESIASI dan DUKUNGAN KEPEDULIAN yang memuliakan.
-4. Tulis narasi langsung berupa teks VO yang siap dibacakan, mengalir, puitis berwibawa, tanpa judul. Durasi sekitar 30-45 detik. Gunakan bahasa Indonesia baku dan menyentuh.`;
-
-            let userContent = [
-                { type: "text", text: "Buatkan narasi VO berdasarkan data dan SOP di atas. Perhatikan juga cuplikan gambar dari lapangan yang saya lampirkan jika ada." }
-            ];
-
-            // Proses ekstraksi frame jika ada video
             if (selectedVideos.length > 0) {
-                // Jika video lebih dari 2, ambil 1 frame per video saja agar ringan
-                // Jika video 1-2, ambil 2 frame (awal dan akhir)
                 const framesPerVideo = selectedVideos.length > 2 ? 1 : 2;
-
                 for (let v of selectedVideos) {
                     const videoElement = document.getElementById(`vid-${v.id}`);
-                    const duration = videoElement.duration && !isNaN(videoElement.duration) ? videoElement.duration : 5; // Default 5 detik jika gagal baca durasi
-                    
+                    const duration = videoElement.duration && !isNaN(videoElement.duration) ? videoElement.duration : 5; 
                     let timePoints = framesPerVideo === 1 ? [duration * 0.5] : [duration * 0.3, duration * 0.7];
-
                     for (let i = 0; i < timePoints.length; i++) {
                         try {
                             const dataURI = await extractFrameAtTime(videoElement, timePoints[i]);
-                            userContent.push({
-                                type: "image_url",
-                                image_url: { url: dataURI }
-                            });
-                        } catch (err) {
-                            console.log("Gagal mengekstrak frame dari video id " + v.id);
-                        }
+                            userContent.push({ type: "image_url", image_url: { url: dataURI } });
+                        } catch (err) { console.log("Gagal ekstrak frame video"); }
                     }
                 }
             }
 
-            const requestBody = {
-                model: "google/gemma-3n-E4B-it", 
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userContent }
-                ],
-                max_tokens: 600,
-                temperature: 0.7
+            return {
+                apiKey: apiKey,
+                requestBody: {
+                    model: "google/gemma-3n-E4B-it", 
+                    messages: [
+                        { role: "system", content: compiledPrompt },
+                        { role: "user", content: userContent }
+                    ],
+                    max_tokens: 800,
+                    temperature: 0.7
+                }
             };
+        }
+
+        async function generateNarasiWithTogether() {
+            const btn = document.getElementById('btn-submit');
+            const targetText = document.getElementById('text-copy-target');
+            btn.disabled = true; btn.innerText = "⏳ Memproses Narasi VO...";
+            targetText.innerText = "Gemma 3 sedang meracik narasi Voice Over...";
+
+            const promptVO = `Kamu adalah Copywriter & Voice Over (VO) senior LAZ Sidogiri.
+Tugas: Produksi naskah narasi VO untuk dokumentasi bantuan.
+
+DATA:
+- Nama: {nama} (Usia: {usia} tahun)
+- Lokasi: {alamat}
+- Realita: {latar}
+- Bantuan: {alasan}
+- Program: {program}
+
+ATURAN MUTLAK:
+1. JANGAN memancing rasa kasihan/mengemis.
+2. Fokus KETANGGUHAN & MARTABAT.
+3. Bantuan = Apresiasi & Kepedulian.
+4. Tulis narasi berupa naskah VO yang siap dibacakan, mengalir, puitis berwibawa, tanpa judul. Durasi 30-45 detik.`;
 
             try {
+                const payload = await buildAiPayload(promptVO);
                 const response = await fetch("https://api.together.xyz/v1/chat/completions", {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify(requestBody)
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${payload.apiKey}` }, body: JSON.stringify(payload.requestBody)
                 });
-
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error?.message || "Gagal menghubungi server Together.");
-                }
-
-                const data = await response.json();
-                const textResult = data.choices[0].message.content;
+                if (!response.ok) throw new Error((await response.json()).error?.message || "Gagal menghubungi server.");
+                const textResult = (await response.json()).choices[0].message.content;
                 
-                let badgeText = selectedVideos.length > 0 ? `✓ Dianalisis dari ${selectedVideos.length} Video (Gemma 3)` : "✓ Berhasil Diproduksi oleh Gemma 3 (Teks Saja)";
-                document.getElementById('ai-tag-container').innerHTML = `<span class="ai-status-tag" style="background:#EBF5FF; color:#007AFF;">${badgeText}</span>`;
+                document.getElementById('ai-tag-container').innerHTML = `<span class="ai-status-tag">✓ VO Selesai (Gemma 3)</span>`;
                 targetText.innerText = textResult;
             } catch (error) {
-                console.error(error);
-                targetText.innerText = `Terjadi kesalahan API Together: ${error.message}. Pastikan API Key benar dan limit API Anda masih tersedia.`;
+                targetText.innerText = `Error: ${error.message}`;
             } finally {
-                btn.disabled = false;
-                btn.innerText = "✨ Buat Narasi VO (Gemma AI)";
+                btn.disabled = false; btn.innerText = "✨ Buat Narasi VO (Gemma AI)";
                 targetText.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
-        function copyText() {
-            const text = document.getElementById('text-copy-target').innerText;
-            if (text.includes("Hasil analisis")) return;
-            navigator.clipboard.writeText(text);
-            alert("✓ Naskah VO berhasil disalin!");
+        async function generateCaptionWithTogether() {
+            const btn = document.getElementById('btn-caption');
+            const targetText = document.getElementById('caption-copy-target');
+            const voText = document.getElementById('text-copy-target').innerText;
+            const refVO = voText.includes("Gemma 3 sedang") ? "(Belum ada narasi)" : voText;
+
+            btn.disabled = true; btn.innerText = "⏳ Menyusun Strategi Sosmed...";
+            targetText.innerText = "Gemma 3 sedang menganalisis algoritma dan menulis caption SEO...";
+
+            const promptCaption = `Anda Copywriter Profesional & Pakar SEO Sosmed (FB, IG, Threads) LAZ Sidogiri.
+Tugas: Buat teks caption dan teks komentar (pinned) berdasarkan data di bawah.
+
+DATA:
+- Nama: {nama} (Usia: {usia} tahun)
+- Lokasi: {alamat}
+- Realita: {latar}
+- Bantuan: {alasan}
+- Program: {program}
+- Referensi VO: ${refVO}
+
+ATURAN CAPTION (Bagian 1):
+- Maksimal 500 karakter.
+- Hook: 1-2 detik pertama menarik, emosional/inspiratif + 1-2 emoji relevan.
+- Body: 1-2 kalimat padat dari inti data.
+- CTA Caption: Soft-selling (Share, Save, atau komen dukungan organik).
+- Hashtag: 5-6 hashtag relevan & SEO-friendly.
+- Gaya: Profesional, positif, empati.
+
+ATURAN KOMENTAR (Bagian 2 - Pisahkan dengan garis "---"):
+- Satu CTA Hard-selling untuk disematkan di kolom komentar.
+- Gaya: Tegas, menggugah aksi nyata/donasi.
+- Gunakan pola: "Buktikan kepedulian kita nyata, bukan sekadar kata-kata. Ambil peran wujudkan [Tujuan/Misi] di sini: 👉 https://s.id/[nama-link]"`;
+
+            try {
+                const payload = await buildAiPayload(promptCaption);
+                const response = await fetch("https://api.together.xyz/v1/chat/completions", {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${payload.apiKey}` }, body: JSON.stringify(payload.requestBody)
+                });
+                if (!response.ok) throw new Error((await response.json()).error?.message || "Gagal menghubungi server.");
+                const textResult = (await response.json()).choices[0].message.content;
+                
+                document.getElementById('caption-tag-container').innerHTML = `<span class="ai-status-tag" style="color:#007AFF; background:#E5F0FF;">✓ Caption & Komentar Siap Publish</span>`;
+                targetText.innerText = textResult;
+            } catch (error) {
+                targetText.innerText = `Error: ${error.message}`;
+            } finally {
+                btn.disabled = false; btn.innerText = "📱 Generate Teks Sosmed";
+                targetText.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            if (text.includes("akan muncul di sini")) return;
+            navigator.clipboard.writeText(text);
+            alert("✓ Teks berhasil disalin!");
+        }
+
+        initAutoSave();
         renderBaseContent();
         checkApiKey();
     </script>
