@@ -50,14 +50,17 @@
         .api-status.ready { color: #007AFF; }
 
         /* Upload Zone */
-        .video-upload-zone { padding: 20px 0; text-align: center; border: 1.5px dashed #C7C7CC; border-radius: 8px; margin-top: 8px; cursor: pointer; background: #76768008; }
+        .video-upload-zone { padding: 20px 0; text-align: center; border: 1.5px dashed #C7C7CC; border-radius: 8px; margin-top: 8px; cursor: pointer; background: #76768008; transition: 0.2s; }
+        .video-upload-zone:active { background: #76768015; }
         .upload-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
         .upload-text { font-size: 0.9rem; color: var(--ios-primary); font-weight: 600; }
         .upload-subtext { font-size: 0.75rem; color: var(--ios-subtext); margin-top: 2px; }
         
-        #video-preview-container { display: none; margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; }
-        #video-preview { width: 100%; display: block; max-height: 200px; object-fit: cover; }
-        .btn-remove-video { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: 600; cursor: pointer; z-index: 10; }
+        /* Multiple Video Previews */
+        #video-preview-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .video-item-wrapper { position: relative; width: calc(50% - 4px); border-radius: 8px; overflow: hidden; background: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .video-item-wrapper video { width: 100%; display: block; height: 120px; object-fit: cover; }
+        .btn-remove-video { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.65); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; font-weight: 700; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; }
 
         .btn-generate { background: #1C1C1E; color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; margin: 16px 0; cursor: pointer; }
         .btn-generate:disabled { background: #AEAEB2; cursor: not-allowed; }
@@ -108,17 +111,18 @@
         <h4 class="section-title">Input Realita Lapangan</h4>
         <div class="ios-card">
             <div class="form-group">
-                <label class="form-label">Video Lapangan (Bebas Ukuran)</label>
-                <input type="file" id="video-input" accept="video/*" style="display: none;" onchange="handleVideoUpload(this)">
+                <label class="form-label">Video Lapangan (Bisa lebih dari 1)</label>
+                <!-- Tambah atribut 'multiple' agar bisa pilih banyak file -->
+                <input type="file" id="video-input" accept="video/*" multiple style="display: none;" onchange="handleMultipleVideoUpload(this)">
+                
                 <div class="video-upload-zone" onclick="document.getElementById('video-input').click()">
                     <span class="upload-icon">📹</span>
                     <span class="upload-text">Upload Video Lapangan</span>
-                    <p class="upload-subtext">Akan diekstrak otomatis untuk AI</p>
+                    <p class="upload-subtext">Ketuk untuk menambah video</p>
                 </div>
-                <div id="video-preview-container">
-                    <button class="btn-remove-video" onclick="removeVideo()">✕</button>
-                    <video id="video-preview" controls playsinline muted></video>
-                </div>
+
+                <!-- Wadah untuk menampung banyak preview video -->
+                <div id="video-preview-container"></div>
             </div>
 
             <div class="form-group">
@@ -197,7 +201,9 @@
         };
 
         let currentProgram = 'pendidikan';
-        let hasVideo = false;
+        
+        // Array untuk menyimpan banyak video
+        let selectedVideos = [];
 
         function saveApiKey(key) { localStorage.setItem('together_api_key', key.trim()); checkApiKey(); }
         function checkApiKey() {
@@ -227,40 +233,72 @@
             document.getElementById('panel-sop').innerHTML = sopHtml;
         }
 
-        function handleVideoUpload(input) {
-            const file = input.files[0];
-            if (file) {
-                const videoURL = URL.createObjectURL(file);
-                const videoPlayer = document.getElementById('video-preview');
-                videoPlayer.src = videoURL;
-                document.getElementById('video-preview-container').style.display = 'block';
-                document.querySelector('.video-upload-zone').style.display = 'none';
-                hasVideo = true;
-            }
+        // --- SISTEM MULTI-VIDEO ---
+
+        function handleMultipleVideoUpload(input) {
+            const files = Array.from(input.files);
+            if (files.length === 0) return;
+
+            // Masukkan setiap file yang dipilih ke dalam array
+            files.forEach(file => {
+                const id = Date.now() + Math.floor(Math.random() * 1000);
+                selectedVideos.push({
+                    id: id,
+                    file: file,
+                    url: URL.createObjectURL(file)
+                });
+            });
+
+            input.value = ""; // Reset input file agar bisa pilih file yang sama lagi jika perlu
+            renderVideoPreviews();
         }
 
-        function removeVideo() {
-            document.getElementById('video-input').value = "";
-            document.getElementById('video-preview-container').style.display = 'none';
-            document.querySelector('.video-upload-zone').style.display = 'block';
-            hasVideo = false;
+        function removeVideo(id) {
+            // Hapus video dari array berdasarkan ID
+            selectedVideos = selectedVideos.filter(v => v.id !== id);
+            renderVideoPreviews();
+        }
+
+        function renderVideoPreviews() {
+            const container = document.getElementById('video-preview-container');
+            container.innerHTML = ''; // Bersihkan container
+
+            selectedVideos.forEach(video => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'video-item-wrapper';
+                wrapper.innerHTML = `
+                    <button class="btn-remove-video" onclick="removeVideo(${video.id})">✕</button>
+                    <video id="vid-${video.id}" src="${video.url}" controls playsinline muted></video>
+                `;
+                container.appendChild(wrapper);
+            });
         }
 
         function extractFrameAtTime(videoElement, timeInSeconds) {
             return new Promise((resolve) => {
-                videoElement.currentTime = timeInSeconds;
-                videoElement.onseeked = () => {
-                    const canvas = document.createElement('canvas');
-                    const scale = Math.min(1, 640 / videoElement.videoWidth);
-                    canvas.width = videoElement.videoWidth * scale;
-                    canvas.height = videoElement.videoHeight * scale;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-                    
-                    const base64DataURI = canvas.toDataURL('image/jpeg', 0.65);
-                    resolve(base64DataURI);
-                };
+                // Memastikan video sudah cukup dimuat informasinya
+                if (videoElement.readyState < 2) {
+                    videoElement.addEventListener('loadeddata', seekAndExtract, { once: true });
+                } else {
+                    seekAndExtract();
+                }
+
+                function seekAndExtract() {
+                    videoElement.currentTime = timeInSeconds;
+                    videoElement.onseeked = () => {
+                        const canvas = document.createElement('canvas');
+                        // Turunkan sedikit resolusi agar token API tidak jebol jika videonya banyak
+                        const scale = Math.min(1, 512 / videoElement.videoWidth);
+                        canvas.width = videoElement.videoWidth * scale;
+                        canvas.height = videoElement.videoHeight * scale;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                        
+                        const base64DataURI = canvas.toDataURL('image/jpeg', 0.65);
+                        resolve(base64DataURI);
+                    };
+                }
             });
         }
 
@@ -277,8 +315,8 @@
             const targetText = document.getElementById('text-copy-target');
             
             btn.disabled = true;
-            btn.innerText = "⏳ Memproses (Gemma AI)...";
-            targetText.innerText = "Gemma 3 sedang meracik narasi...";
+            btn.innerText = "⏳ Memproses Semua Video (Gemma AI)...";
+            targetText.innerText = "Gemma 3 sedang menganalisis rekaman lapangan & meracik narasi...";
 
             const systemPrompt = `Kamu adalah Copywriter & Voice Over (VO) senior untuk Lembaga Amil Zakat (LAZ) Sidogiri.
 Tugasmu memproduksi naskah narasi VO untuk video dokumentasi bantuan.
@@ -297,20 +335,32 @@ ATURAN MUTLAK:
 4. Tulis narasi langsung berupa teks VO yang siap dibacakan, mengalir, puitis berwibawa, tanpa judul. Durasi sekitar 30-45 detik. Gunakan bahasa Indonesia baku dan menyentuh.`;
 
             let userContent = [
-                { type: "text", text: "Buatkan narasi VO berdasarkan data dan SOP di atas. Perhatikan juga gambar yang saya lampirkan jika ada." }
+                { type: "text", text: "Buatkan narasi VO berdasarkan data dan SOP di atas. Perhatikan juga cuplikan gambar dari lapangan yang saya lampirkan jika ada." }
             ];
 
-            if (hasVideo) {
-                const videoPlayer = document.getElementById('video-preview');
-                const duration = videoPlayer.duration || 10;
-                
-                const timePoints = [duration * 0.3, duration * 0.7];
-                for (let i = 0; i < timePoints.length; i++) {
-                    const dataURI = await extractFrameAtTime(videoPlayer, timePoints[i]);
-                    userContent.push({
-                        type: "image_url",
-                        image_url: { url: dataURI }
-                    });
+            // Proses ekstraksi frame jika ada video
+            if (selectedVideos.length > 0) {
+                // Jika video lebih dari 2, ambil 1 frame per video saja agar ringan
+                // Jika video 1-2, ambil 2 frame (awal dan akhir)
+                const framesPerVideo = selectedVideos.length > 2 ? 1 : 2;
+
+                for (let v of selectedVideos) {
+                    const videoElement = document.getElementById(`vid-${v.id}`);
+                    const duration = videoElement.duration && !isNaN(videoElement.duration) ? videoElement.duration : 5; // Default 5 detik jika gagal baca durasi
+                    
+                    let timePoints = framesPerVideo === 1 ? [duration * 0.5] : [duration * 0.3, duration * 0.7];
+
+                    for (let i = 0; i < timePoints.length; i++) {
+                        try {
+                            const dataURI = await extractFrameAtTime(videoElement, timePoints[i]);
+                            userContent.push({
+                                type: "image_url",
+                                image_url: { url: dataURI }
+                            });
+                        } catch (err) {
+                            console.log("Gagal mengekstrak frame dari video id " + v.id);
+                        }
+                    }
                 }
             }
 
@@ -320,7 +370,7 @@ ATURAN MUTLAK:
                     { role: "system", content: systemPrompt },
                     { role: "user", content: userContent }
                 ],
-                max_tokens: 500,
+                max_tokens: 600,
                 temperature: 0.7
             };
 
@@ -342,12 +392,12 @@ ATURAN MUTLAK:
                 const data = await response.json();
                 const textResult = data.choices[0].message.content;
                 
-                let badgeText = hasVideo ? "✓ Berhasil Diproduksi oleh Gemma 3" : "✓ Berhasil Diproduksi oleh Gemma 3 (Teks Saja)";
+                let badgeText = selectedVideos.length > 0 ? `✓ Dianalisis dari ${selectedVideos.length} Video (Gemma 3)` : "✓ Berhasil Diproduksi oleh Gemma 3 (Teks Saja)";
                 document.getElementById('ai-tag-container').innerHTML = `<span class="ai-status-tag" style="background:#EBF5FF; color:#007AFF;">${badgeText}</span>`;
                 targetText.innerText = textResult;
             } catch (error) {
                 console.error(error);
-                targetText.innerText = `Terjadi kesalahan API Together: ${error.message}. Pastikan API Key benar.`;
+                targetText.innerText = `Terjadi kesalahan API Together: ${error.message}. Pastikan API Key benar dan limit API Anda masih tersedia.`;
             } finally {
                 btn.disabled = false;
                 btn.innerText = "✨ Buat Narasi VO (Gemma AI)";
