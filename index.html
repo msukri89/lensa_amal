@@ -50,6 +50,17 @@
         .api-status { font-size: 0.85rem; font-weight: 600; color: #FF3B30; }
         .api-status.ready { color: #007AFF; }
 
+        /* Checklist Styles */
+        .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 0.5px solid var(--ios-border); cursor: pointer; }
+        .checklist-item:last-child { border-bottom: none; }
+        .ios-checkbox { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--ios-primary); cursor: pointer; flex-shrink: 0; }
+        .checklist-text { flex: 1; }
+        .checklist-text strong { display: block; color: var(--ios-text); font-weight: 600; font-size: 0.95rem; margin-bottom: 3px; }
+        .checklist-text span { color: var(--ios-subtext); font-size: 0.85rem; line-height: 1.4; display: block; }
+        /* Efek coret ketika selesai */
+        .checklist-item input:checked + .checklist-text strong,
+        .checklist-item input:checked + .checklist-text span { text-decoration: line-through; opacity: 0.6; }
+
         /* Upload Zone */
         .video-upload-zone { padding: 20px 0; text-align: center; border: 1.5px dashed #C7C7CC; border-radius: 8px; margin-top: 8px; cursor: pointer; background: #76768008; transition: 0.2s; }
         .video-upload-zone:active { background: #76768015; }
@@ -108,7 +119,8 @@
             <p class="ios-subtitle" id="display-subtitle">Bantuan Beasiswa & Sarana</p>
         </div>
 
-        <h4 class="section-title">Checklist Footage (Wajib Diambil)</h4>
+        <!-- CHECKLIST PANDUAN DOKUMENTASI (BARU) -->
+        <h4 class="section-title">Roadmap Dokumentasi Visual (Wajib Diambil)</h4>
         <div class="ios-card" id="panel-footage"></div>
 
         <h4 class="section-title">Persiapan & Etika (SOP)</h4>
@@ -202,29 +214,54 @@
     </nav>
 
     <script>
+        // Data dirombak menggunakan standar 5-Shot Rule (Wide, Medium, Close-Up, Interaksi, Handover)
         const programData = {
             pendidikan: { 
                 title: "Peduli Pendidikan", 
                 subtitle: "Bantuan Beasiswa & Sarana", 
-                footage: ["Close up ekspresi serius/tekun saat belajar atau mengaji.", "Detail buku, alat tulis, atau sarana yang digunakan.", "Suasana lingkungan sekolah/pesantren (Wide/Medium)."],
+                footage: [
+                    { title: "Establishing (Wide)", desc: "Suasana utuh gedung sekolah/pesantren dari kejauhan atau jalan masuknya." },
+                    { title: "Action (Medium)", desc: "Mustahik sedang fokus belajar, mengaji, atau aktivitas rutin di kelas." },
+                    { title: "Detail (Close-Up)", desc: "Sorot tajam pada lembaran buku, coretan tangan, atau sepatu/seragam yang lusuh." },
+                    { title: "Empathy/Interaction", desc: "Interaksi natural dengan teman atau guru (senyum/diskusi), tidak melihat kamera." },
+                    { title: "B-Roll Penyaluran", desc: "Detail tangan penyerahan bantuan, terlihat logo LAZ Sidogiri secara natural." }
+                ],
                 sop: ["Hormati muruah santri/pelajar, tunjukkan semangatnya, BUKAN keluh kesahnya.", "Posisikan bantuan sebagai apresiasi terhadap kesungguhannya menuntut ilmu."] 
             },
             ekonomi: { 
                 title: "Peduli Ekonomi", 
                 subtitle: "Modal Usaha & Pemberdayaan",
-                footage: ["Close up tangan yang sedang bekerja (membuat produk/melayani).", "Hasil produk/dagangan yang dijual.", "Kondisi lokasi tempat usaha/lapak."], 
+                footage: [
+                    { title: "Establishing (Wide)", desc: "Lokasi lapak/tempat usaha dengan latar belakang keramaian sekitar." },
+                    { title: "Action (Medium)", desc: "Pergerakan fisik mustahik saat bekerja (mengaduk adonan, memikul barang, dsb)." },
+                    { title: "Detail (Close-Up)", desc: "Fokus pada keringat, tangan yang mengolah produk, atau alat kerja yang digunakan." },
+                    { title: "Empathy/Interaction", desc: "Mustahik sedang melayani pembeli atau berbincang akrab dengan tim relawan." },
+                    { title: "B-Roll Penyaluran", desc: "Penyerahan modal/alat usaha, rekam senyum syukur tanpa kesan mengasihani." }
+                ], 
                 sop: ["Posisikan kamera sejajar. Jangan beri kesan mengasihani dari atas.", "Tonjolkan kerasnya keringat mereka bekerja, fokus pada prospek kemandirian usahanya."] 
             },
             dakwah: { 
                 title: "Peduli Dakwah", 
                 subtitle: "Dukungan Da'i & Syiar Islam", 
-                footage: ["Aktivitas dakwah di masjid/langgar pedesaan.", "Interaksi da'i dengan jamaah/anak didik.", "Perjalanan menuju lokasi dakwah (jika akses sulit)."],
+                footage: [
+                    { title: "Establishing (Wide)", desc: "Suasana jalan/medan sulit menuju lokasi dakwah atau langgar di pedesaan." },
+                    { title: "Action (Medium)", desc: "Da'i sedang menyampaikan materi, memimpin doa, atau mengajar jamaah." },
+                    { title: "Detail (Close-Up)", desc: "Wajah antusias para jamaah/anak didik saat mendengarkan." },
+                    { title: "Empathy/Interaction", desc: "Kehangatan ngobrol antara da'i dengan warga sebelum/sesudah majelis." },
+                    { title: "B-Roll Penyaluran", desc: "Momen serah terima bantuan kafalah/dukungan dakwah." }
+                ],
                 sop: ["Tampilkan wibawa dan keikhlasan para pendakwah di pelosok desa.", "Sorot antusiasme masyarakat/jamaah, dan hindari kesan menggurui."] 
             },
             kemanusiaan: { 
                 title: "Peduli Kemanusiaan", 
                 subtitle: "Tanggap Bencana & Lingkungan",
-                footage: ["Kondisi riil lingkungan pasca bencana/krisis.", "Aktivitas gotong royong warga/relawan.", "Senyum ketangguhan penyintas."], 
+                footage: [
+                    { title: "Establishing (Wide)", desc: "Kondisi riil lingkungan pasca bencana/krisis untuk skala kerusakan." },
+                    { title: "Action (Medium)", desc: "Warga/relawan yang sedang gotong royong membersihkan atau mengevakuasi." },
+                    { title: "Detail (Close-Up)", desc: "Puing-puing, genangan air, atau tangan yang saling menggenggam membantu." },
+                    { title: "Empathy/Interaction", desc: "Senyum ketangguhan penyintas saat dibantu oleh relawan." },
+                    { title: "B-Roll Penyaluran", desc: "Pembagian logistik/bantuan, pastikan kerumunan kondusif dan tertib." }
+                ], 
                 sop: ["Fokus pada ketangguhan penyintas, kepedulian lingkungan, dan semangat gotong royong.", "Hindari mengeksploitasi kesedihan, tangisan, atau kerusakan fisik secara berlebihan."] 
             }
         };
@@ -232,7 +269,7 @@
         let currentProgram = 'pendidikan';
         let selectedVideos = [];
 
-        // --- SISTEM AUTO-SAVE DRAFT ---
+        // --- SISTEM AUTO-SAVE & CHECKBOX ---
         function initAutoSave() {
             const inputs = document.querySelectorAll('.auto-save');
             inputs.forEach(input => {
@@ -241,11 +278,19 @@
 
                 input.addEventListener('input', () => {
                     localStorage.setItem('draft_' + input.id, input.value);
-                    const notice = document.getElementById('draft-notice');
-                    notice.style.display = 'block';
-                    setTimeout(() => { notice.style.display = 'none'; }, 2000);
+                    showDraftNotice();
                 });
             });
+        }
+
+        function showDraftNotice() {
+            const notice = document.getElementById('draft-notice');
+            notice.style.display = 'block';
+            setTimeout(() => { notice.style.display = 'none'; }, 2000);
+        }
+
+        function saveChecklistState(id, isChecked) {
+            localStorage.setItem('check_' + id, isChecked);
         }
 
         // --- MANAJEMEN API KEY ---
@@ -273,10 +318,23 @@
             document.getElementById('display-title').innerText = data.title;
             document.getElementById('display-subtitle').innerText = data.subtitle;
             
+            // Render Checklist Footage interaktif
             let footHtml = '';
-            data.footage.forEach(item => { footHtml += `<div class="list-item">🎥 ${item}</div>`; });
+            data.footage.forEach((item, index) => { 
+                const checkId = `ftg_${currentProgram}_${index}`;
+                const isChecked = localStorage.getItem('check_' + checkId) === 'true' ? 'checked' : '';
+                footHtml += `
+                <label class="checklist-item">
+                    <input type="checkbox" class="ios-checkbox" id="${checkId}" ${isChecked} onchange="saveChecklistState('${checkId}', this.checked)">
+                    <div class="checklist-text">
+                        <strong>${item.title}</strong>
+                        <span>${item.desc}</span>
+                    </div>
+                </label>`; 
+            });
             document.getElementById('panel-footage').innerHTML = footHtml;
 
+            // Render SOP
             let sopHtml = '';
             data.sop.forEach((item, index) => { sopHtml += `<div class="list-item"><strong>0${index+1}.</strong> ${item}</div>`; });
             document.getElementById('panel-sop').innerHTML = sopHtml;
