@@ -3,6 +3,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LensaAmal - Together AI Vision</title>
+    <style>
+        :root {
+            --ios-bg: #F2F2F7;
+            --ios-card: #FFFFFF;
+            --ios-primary: #139F46; /* Hijau LAZ */
+            --ios-text: #1C1C1E;
+            --ios-subtext: #8E8E93;
+            --ios-border: rgba(60, 60, 67, 0.18);
+            --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-stack); -webkit-font-smoothing: antialiased; }
+        body { background-color: var(--ios-bg); color: var(--ios-text); padding-bottom: 110px; }
+
+        header { 
+            background-color: rgba(242, 242, 247, 0.85); 
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); 
+            padding: 16px; padding-top: calc(16px + env(safe-area-inset-top));
+            text-align: center; font-weight: 600; font-size: 1rem; 
+            position: sticky; top: 0; z-index: 100; border-bottom: 0.5px solid var(--ios-border);
+        }
+
+        .container { padding: 16px; max-width: 600px; margin: 0 auto; }
+        .program-header { margin-bottom: 24px; margin-top: 10px; }
+        .ios-large-title { font-size: 2.2rem; font-weight: 700; letter-spacing: -0.8px; margin-bottom: 4px; }
+        .ios-subtitle { font-size: 1rem; color: var(--ios-subtext); font-weight: 500; }
+
+        h4.section-title { 
+            margin-left: 16px; margin-bottom: 8px; margin-top: 28px;
+            color: var(--ios-subtext); font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; 
+        }
+
+        .ios-card { background-color: var(--ios-card); border-radius: 12px; padding: 0 16px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); overflow: hidden; }
+
+        .form-group { padding: 12px 0; border-bottom: 0.5px solid var(--ios-border); }
+        .form-group:last-child { border-bottom: none; }
+        .form-label { display: block; font-size: 0.8rem; color: var(--ios-subtext); margin-bottom: 6px; font-weight: 500;}
+        .ios-input, .ios-textarea { width: 100%; border: none; font-size: 1rem; color: var(--ios-text); background: transparent; outline: none; }
+        .ios-textarea { resize: vertical; min-height: 60px; line-height: 1.4; }
+        .ios-input::placeholder, .ios-textarea::placeholder { color: #C7C7CC; }
+
+        .api-badge { background: #76768015; border-radius: 8px; padding: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .api-status { font-size: 0.85rem; font-weight: 600; color: #FF3B30; }
+        .api-status.ready { color: #007AFF; /* Biru khas Together/iOS */ }
+
+        /* Upload Zone */
+        .video-upload-zone { padding: 20px 0; text-align: center; border: 1.5px dashed #C7C7CC; border-radius: 8px; margin-top: 8px; cursor: pointer; background: #76768008; }
+        .upload-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
+        .upload-text { font-size: 0.9rem; color: var(--ios-primary); font-weight: 600; }
+        .upload-subtext { font-size: 0.75rem; color: var(--ios-subtext); margin-top: 2px; }
+        
+        #video-preview-container { display: none; margin-top: 12px; border-radius: 8px; overflow: hidden; background: #000; position: relative; }
+        #video-preview { width: 100%; display: block; max-height: 200px; object-fit: cover; }
+        .btn-remove-video { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-weight: 600; cursor: pointer; z-index: 10; }
+
+        .btn-generate { background: #1C1C1E; color: white; border: none; width: 100%; padding: 14px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; margin: 16px 0; cursor: pointer; }
+        .btn-generate:disabled { background: #AEAEB2; cursor: not-allowed; }
+        .btn-copy { background: #EBF2EE; color: var(--ios-primary); border: none; padding: 12px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; margin-top: 12px; cursor: pointer; width: 100%; }
+
+        .narasi-box { padding: 16px 0; }
+        .narasi-text { font-size: 1.05rem; line-height: 1.5; border-left: 4px solid var(--ios-primary); padding: 12px; background: #fafafa; border-radius: 0 8px 8px 0; min-height: 60px; white-space: pre-wrap; }
+        .ai-status-tag { display: inline-block; background: #EBF2EE; color: var(--ios-primary); font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px; }
+
+        .list-item { padding: 14px 0; border-bottom: 0.5px solid var(--ios-border); font-size: 0.95rem; line-height: 1.4; }
+        .list-item strong { color: var(--ios-primary); }
+
+        .tab-bar { position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(242, 242, 247, 0.85); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: 0.5px solid var(--ios-border); display: flex; justify-content: space-around; align-items: center; padding: 10px 5px calc(10px + env(safe-area-inset-bottom)); z-index: 100; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; color: var(--ios-subtext); text-decoration: none; cursor: pointer; flex: 1; }
+        .tab-item.active { color: var(--ios-primary); }
+        .tab-item svg { width: 24px; height: 24px; margin-bottom: 4px; stroke-width: 1.5; stroke: currentColor; fill: none; }
+        .tab-label { font-size: 0.65rem; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <header>LensaAmal</header>
+
+    <div class="container">
+        
+        <!-- PENGATURAN API KEY TOGETHER AI -->
+        <div class="ios-card" style="margin-top: 10px; padding: 12px 16px;">
+            <div class="api-badge">
+                <div>
+                    <div style="font-weight:600; font-size:0.9rem;">Koneksi Together AI (Llama 3.2 Vision)</div>
+                    <div id="api-status-text" class="api-status">API Key Belum Diatur</div>
+                </div>
+            </div>
+            <div class="form-group" style="border:none; padding:0;">
+                <input type="password" id="input-api-key" class="ios-input" placeholder="Tempel API Key Together Anda di sini..." oninput="saveApiKey(this.value)">
+            </div>
+        </div>
+
+        <div class="program-header">
+            <h1 class="ios-large-title" id="display-title">Peduli Pendidikan</h1>
+            <p class="ios-subtitle" id="display-subtitle">Bantuan Beasiswa & Sarana</p>
+        </div>
+
+        <h4 class="section-title">Persiapan & Etika (SOP)</h4>
+        <div class="ios-card" id="panel-sop"></div>
+
+        <!-- INPUT VIDEO (BEBAS UKURAN) -->
+        <h4 class="section-title">Input Realita Lapangan</h4>
+        <div class="ios-card">
+            <div class="form-group">
+                <label class="form-label">Video Lapangan (Bebas Ukuran)</label>
+                <input type="file" id="video-input" accept="video/*" style="display: none;" onchange="handleVideoUpload(this)">
+                <div class="video-upload-zone" onclick="document.getElementById('video-input').click()">
+                    <span class="upload-icon">📹</span>
+                    <span class="upload-text">Upload Video Lapangan</span>
+                    <p class="upload-subtext">Akan diekstrak otomatis untuk Llama Vision</p>
+                </div>
+                <div id="video-preview-container">
+                    <button class="btn-remove-video" onclick="removeVideo()">✕</button>
+                    <video id="video-preview" controls playsinline muted></video>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nama Lengkap Mustahik</label>
+                <input type="text" id="input-nama" class="ios-input" placeholder="Contoh: Si Fulan">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Lokasi / Alamat</label>
+                <input type="text" id="input-alamat" class="ios-input" placeholder="Contoh: Pasuruan">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Kondisi / Latar Belakang Riil</label>
+                <textarea id="input-latar" class="ios-textarea" placeholder="Tulis rintangan hidupnya (Ketik apa adanya saja, AI yang akan menyaring martabatnya)"></textarea>
+            </div>
+            <div class="form-group" style="border:none;">
+                <label class="form-label">Target Kemandirian (Alasan Dibantu)</label>
+                <input type="text" id="input-alasan" class="ios-input" placeholder="Contoh: Membeli perlengkapan sekolah dan kitab baru">
+            </div>
+            
+            <button class="btn-generate" id="btn-submit" onclick="generateNarasiWithTogether()">✨ Buat Narasi VO (Together AI)</button>
+        </div>
+
+        <!-- HASIL DARI TOGETHER AI -->
+        <h4 class="section-title">Naskah VO Hasil Llama AI</h4>
+        <div class="ios-card">
+            <div class="narasi-box">
+                <div id="ai-tag-container"></div>
+                <div id="text-copy-target" class="narasi-text"><em>Hasil analisis visual dan teks narasi bermartabat akan muncul di sini...</em></div>
+                <button class="btn-copy" onclick="copyText()">Salin Naskah VO</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="tab-bar">
+        <div class="tab-item active" id="nav-pendidikan" onclick="switchProgram('pendidikan')">
+            <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg><span class="tab-label">Pendidikan</span>
+        </div>
+        <div class="tab-item" id="nav-ekonomi" onclick="switchProgram('ekonomi')">
+            <svg viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x1="22" y1="10" y2="10"/></svg><span class="tab-label">Ekonomi</span>
+        </div>
+    </nav>
+
+    <script>
+        const programData = {
+            pendidikan: { title: "Peduli Pendidikan", subtitle: "Bantuan Beasiswa & Sarana", sop: ["Hormati muruah santri, tunjukkan semangatnya, BUKAN keluh kesahnya.", "Pastikan atribut LAZ Sidogiri terlihat saat penyerahan."] },
+            ekonomi: { title: "Peduli Ekonomi", subtitle: "Modal Usaha & Pemberdayaan", sop: ["Posisikan kamera sejajar. Jangan beri kesan mengasihani dari atas.", "Tonjolkan kerasnya keringat mereka bekerja, fokus pada prospek usahanya."] }
+        };
+
+        let currentProgram = 'pendidikan';
+        let hasVideo = false;
+
+        // Ubah local storage key agar tidak tercampur dengan kunci Gemini
+        function saveApiKey(key) { localStorage.setItem('together_api_key', key.trim()); checkApiKey(); }
+        function checkApiKey() {
+            const savedKey = localStorage.getItem('together_api_key');
+            const statusText = document.getElementById('api-status-text');
+            const inputField = document.getElementById('input-api-key');
+            if (savedKey && savedKey.length > 20) {
+                statusText.innerText = "✓ Tersambung ke Together AI"; statusText.className = "api-status ready"; inputField.value = savedKey;
+            } else {
+                statusText.innerText = "API Key Belum Diatur"; statusText.className = "api-status";
+            }
+        }
+
+        function switchProgram(programKey) {
+            currentProgram = programKey;
+            document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('nav-' + programKey).classList.add('active');
+            renderBaseContent();
+        }
+
+        function renderBaseContent() {
+            const data = programData[currentProgram];
+            document.getElementById('display-title').innerText = data.title;
+            document.getElementById('display-subtitle').innerText = data.subtitle;
+            let sopHtml = '';
+            data.sop.forEach((item, index) => { sopHtml += `<div class="list-item"><strong>0${index+1}.</strong> ${item}</div>`; });
+            document.getElementById('panel-sop').innerHTML = sopHtml;
+        }
+
+        function handleVideoUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const videoURL = URL.createObjectURL(file);
+                const videoPlayer = document.getElementById('video-preview');
+                videoPlayer.src = videoURL;
+                document.getElementById('video-preview-container').style.display = 'block';
+                document.querySelector('.video-upload-zone').style.display = 'none';
+                hasVideo = true;
+            }
+        }
+
+        function removeVideo() {
+            document.getElementById('video-input').value = "";
+            document.getElementById('video-preview-container').style.display = 'none';
+            document.querySelector('.video-upload-zone').style.display = 'block';
+            hasVideo = false;
+        }
+
+        // Fungsi Ekstrak Gambar tetap sama, mengembalikan base64 murni
+        function extractFrameAtTime(videoElement, timeInSeconds) {
+            return new Promise((resolve) => {
+                videoElement.currentTime = timeInSeconds;
+                videoElement.onseeked = () => {
+                    const canvas = document.createElement('canvas');
+                    const scale = Math.min(1, 640 / videoElement.videoWidth);
+                    canvas.width = videoElement.videoWidth * scale;
+                    canvas.height = videoElement.videoHeight * scale;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                    
+                    // Kembalikan dalam format Data URI penuh yang dibutuhkan Together/OpenAI
+                    const base64DataURI = canvas.toDataURL('image/jpeg', 0.65);
+                    resolve(base64DataURI);
+                };
+            });
+        }
+
+        // ================= KONEKSI KE TOGETHER AI API =================
+        async function generateNarasiWithTogether() {
+            const apiKey = localStorage.getItem('together_api_key');
+            if (!apiKey) { alert("Masukkan API Key Together AI Anda terlebih dahulu!"); return; }
+
+            const nama = document.getElementById('input-nama').value.trim() || "Pejuang Nafkah";
+            const alamat = document.getElementById('input-alamat').value.trim() || "Daerah setempat";
+            const latar = document.getElementById('input-latar').value.trim() || "Menghadapi tantangan hidup";
+            const alasan = document.getElementById('input-alasan').value.trim() || "Mendukung kemandiriannya";
+
+            const btn = document.getElementById('btn-submit');
+            const targetText = document.getElementById('text-copy-target');
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ Memproses (Together AI)...";
+            targetText.innerText = "Llama 3.2 sedang meracik narasi...";
+
+            const systemPrompt = `Kamu adalah Copywriter & Voice Over (VO) senior untuk Lembaga Amil Zakat (LAZ) Sidogiri.
+Tugasmu memproduksi naskah narasi VO untuk video dokumentasi bantuan.
+
+DATA:
+- Nama Penerima: ${nama}
+- Lokasi: ${alamat}
+- Realita Lapangan: ${latar}
+- Target Bantuan: ${alasan}
+- Program: ${programData[currentProgram].title}
+
+ATURAN MUTLAK:
+1. JANGAN menampakkan kesan kemiskinan yang memancing rasa kasihan/mengemis.
+2. Fokus pada KETANGGUHAN, SEMANGAT, ETOS KERJA, dan MARTABAT penerima.
+3. Analisis gambar cuplikan video yang dilampirkan (jika ada). Sebutkan detail aksi nyata dari gambar tersebut secara puitis.
+4. Posisikan bantuan LAZ Sidogiri sebagai APRESIASI atas perjuangan mulia mereka, BUKAN belas kasihan.
+5. Tulis narasi langsung berupa teks VO yang siap dibacakan, mengalir, puitis berwibawa, tanpa judul. Durasi sekitar 30-45 detik. Gunakan bahasa Indonesia baku dan menyentuh.`;
+
+            // Struktur Request standar OpenAI yang digunakan Together AI
+            let userContent = [
+                { type: "text", text: "Buatkan narasi VO berdasarkan data dan SOP di atas. Perhatikan juga gambar yang saya lampirkan." }
+            ];
+
+            if (hasVideo) {
+                const videoPlayer = document.getElementById('video-preview');
+                const duration = videoPlayer.duration || 10;
+                
+                // Ambil 2 frame saja agar tidak terlalu memberatkan server Vision
+                const timePoints = [duration * 0.3, duration * 0.7];
+                
+                for (let i = 0; i < timePoints.length; i++) {
+                    const dataURI = await extractFrameAtTime(videoPlayer, timePoints[i]);
+                    userContent.push({
+                        type: "image_url",
+                        image_url: {
+                            url: dataURI
+                        }
+                    });
+                }
+            }
+
+            const requestBody = {
+                model: "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo", // Model Vision andalan Together AI
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userContent }
+                ],
+                max_tokens: 500,
+                temperature: 0.7
+            };
+
+            try {
+                const response = await fetch("https://api.together.xyz/v1/chat/completions", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || "Gagal menghubungi server Together.");
+                }
+
+                const data = await response.json();
+                const textResult = data.choices[0].message.content;
+                
+                let badgeText = hasVideo ? "✓ Berhasil Diproduksi oleh Llama 3.2 Vision" : "✓ Berhasil Diproduksi oleh Llama 3.2 (Teks Saja)";
+                document.getElementById('ai-tag-container').innerHTML = `<span class="ai-status-tag" style="background:#EBF5FF; color:#007AFF;">${badgeText}</span>`;
+                targetText.innerText = textResult;
+            } catch (error) {
+                console.error(error);
+                targetText.innerText = `Terjadi kesalahan API Together: ${error.message}. Pastikan API Key benar.`;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "✨ Buat Narasi VO (Together AI)";
+                targetText.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function copyText() {
+            const text = document.getElementById('text-copy-target').innerText;
+            if (text.includes("Hasil analisis")) return;
+            navigator.clipboard.writeText(text);
+            alert("✓ Naskah VO berhasil disalin!");
+        }
+
+        renderBaseContent();
+        checkApiKey();
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>LensaAmal - AI Frame Extractor</title>
     <style>
         :root {
